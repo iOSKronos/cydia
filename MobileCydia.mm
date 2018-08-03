@@ -118,6 +118,8 @@ extern "C" {
 #include "Cydia/ProgressEvent.h"
 /* }}} */
 
+const char *common_arch=NULL;
+
 /* Profiler {{{ */
 struct timeval _ltv;
 bool _itv;
@@ -2745,10 +2747,15 @@ struct PackageNameOrdering :
 - (BOOL) upgradableAndEssential:(BOOL)essential {
     _profile(Package$upgradableAndEssential)
         pkgCache::VerIterator current(iterator_.CurrentVer());
-        if (current.end())
-            return essential && essential_;
-        else
+        if (current.end()) {
+            if (essential && essential_) {
+                return (strcmp(version_.Arch(), common_arch)==0);
+            } else {
+                return false;
+            }
+        } else {
             return version_ != current;
+        }
     _end
 }
 
@@ -3475,11 +3482,11 @@ class CydiaLogCleaner :
 @synchronized (self) {
     if (static_cast<pkgDepCache *>(cache_) == NULL)
         return nil;
-    pkgCache::PkgIterator iterator(cache_->FindPkg([name UTF8String]
-#ifndef __arm__
-        , "any"
-#endif
-    ));
+    pkgCache::PkgIterator iterator;
+    // try common arch first
+    iterator = cache_->FindPkg([name UTF8String], common_arch);
+    if (iterator.end())
+        iterator = cache_->FindPkg([name UTF8String], "any");
     return iterator.end() ? nil : [[Package newPackageWithIterator:iterator withZone:NULL inPool:NULL database:self] autorelease];
 } }
 
@@ -9458,6 +9465,9 @@ int main(int argc, char *argv[]) {
     _assert(pkgInitConfig(*_config));
     _assert(pkgInitSystem(*_config, _system));
 
+    const Configuration::Item *arch = _config->Tree("APT::Architecture");
+    NSLog(@"Common Arch: %s\n", arch->Value.c_str());
+    common_arch = arch->Value.c_str();
     _config->Set("Acquire::AllowInsecureRepositories", true);
     _config->Set("Acquire::Check-Valid-Until", false);
 
