@@ -280,6 +280,8 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	mkdir -p _/var/lib/cydia
 	
 	mkdir -p _/etc/apt
+	mkdir _/etc/apt/apt.conf.d
+	mkdir _/etc/apt/preferences.d
 	cp -a Trusted.gpg _/etc/apt/trusted.gpg.d
 	cp -a Sources.list _/etc/apt/sources.list.d
 	
