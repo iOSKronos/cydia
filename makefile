@@ -24,17 +24,15 @@ cycc += -fvisibility=hidden
 link += -Wl,-dead_strip
 link += -Wl,-no_dead_strip_inits_and_terms
 
-flag += -Xarch_armv6 -Iapt32
-flag += -Xarch_armv6 -Iapt32-contrib
-flag += -Xarch_armv6 -Iapt32-deb
-flag += -Xarch_armv6 -Iapt-extra
-flag += -Xarch_armv6 -IObjects/apt32
+iapt := 
+iapt += -Iapt32
+iapt += -Iapt32-contrib
+iapt += -Iapt32-deb
+iapt += -Iapt-extra
+iapt += -IObjects/apt32
 
-flag += -Xarch_arm64 -Iapt64
-flag += -Xarch_arm64 -Iapt64-contrib
-flag += -Xarch_arm64 -Iapt64-deb
-flag += -Xarch_arm64 -Iapt-extra
-flag += -Xarch_arm64 -IObjects/apt64
+flag += $(patsubst %,-Xarch_armv6 %,$(iapt))
+flag += $(patsubst %,-Xarch_arm64 %,$(subst apt32,apt64,$(iapt)))
 
 flag += -I.
 flag += -isystem sysroot/usr/include
@@ -67,6 +65,9 @@ libs += -framework SystemConfiguration
 libs += -framework WebCore
 libs += -framework WebKit
 
+libs += -framework CFNetwork
+libs += -llockdown
+
 libs += -Xarch_armv6 -Wl,-force_load,Objects/libapt32.a
 libs += -Xarch_arm64 -Wl,-force_load,Objects/libapt64.a
 
@@ -83,21 +84,29 @@ code := $(foreach dir,$(dirs),$(wildcard $(foreach ext,h hpp c cpp m mm,$(dir)/*
 code := $(filter-out SDURLCache/SDURLCacheTests.m,$(code))
 code += MobileCydia.mm Version.mm iPhonePrivate.h Cytore.hpp lookup3.c Sources.h Sources.mm DiskUsage.cpp
 
+code += gpgv.cc
+code += http.cc
+
 source := $(filter %.m,$(code)) $(filter %.mm,$(code))
-source += $(filter %.c,$(code)) $(filter %.cpp,$(code))
-header := $(filter %.h,$(code)) $(filter %.hpp,$(code))
+source += $(filter %.c,$(code)) $(filter %.cpp,$(code)) $(filter %.cc,$(code))
+header := $(filter %.h,$(code)) $(filter %.hpp,$(code)) $(filter %.hh,$(code))
 
 object := $(source)
 object := $(object:.c=.o)
 object := $(object:.cpp=.o)
+object := $(object:.cc=.o)
 object := $(object:.m=.o)
 object := $(object:.mm=.o)
 object := $(object:%=Objects/%)
+
+methods := copy file rred
 
 libapt32 := 
 libapt32 += $(wildcard apt32/apt-pkg/*.cc)
 libapt32 += $(wildcard apt32/apt-pkg/deb/*.cc)
 libapt32 += $(wildcard apt32/apt-pkg/contrib/*.cc)
+libapt32 += apt32/methods/gzip.cc
+libapt32 += $(patsubst %,apt32/methods/%.cc,$(methods))
 libapt32 := $(patsubst %.cc,Objects/%.o,$(libapt32))
 
 libapt64 := 
@@ -106,6 +115,7 @@ libapt64 += $(wildcard apt64/apt-pkg/deb/*.cc)
 libapt64 += $(wildcard apt64/apt-pkg/contrib/*.cc)
 libapt64 += apt64/apt-pkg/tagfile-keys.cc
 libapt64 += apt64/methods/store.cc
+libapt64 += $(patsubst %,apt64/methods/%.cc,$(methods))
 libapt64 := $(filter-out %/srvrec.cc,$(libapt64))
 libapt64 := $(patsubst %.cc,Objects/%.o,$(libapt64))
 
@@ -128,20 +138,26 @@ flag64 += -arch arm64
 flag64 += -Xarch_arm64 -miphoneos-version-min=7.0
 
 apt32 := $(cycc) $(flag32) $(flag)
-apt32 += -include apt.h
 apt32 += -Wno-deprecated-register
 apt32 += -Wno-format-security
 apt32 += -Wno-tautological-compare
 apt32 += -Wno-uninitialized
 apt32 += -Wno-unused-private-field
 apt32 += -Wno-unused-variable
-apt32 += -D'VERSION="0.7.25.3"'
 
 apt64 := $(cycc) $(flag64) $(flag)
 apt64 += -include apt.h
 apt64 += -Wno-deprecated-register
 apt64 += -Wno-unused-private-field
 apt64 += -Wno-unused-variable
+
+eapt := -include apt.h
+apt64 += $(eapt)
+eapt += -D'VERSION="0.7.25.3"'
+apt32 += $(eapt)
+eapt += -Wno-format
+eapt += -Wno-logical-op-parentheses
+iapt += $(eapt)
 
 cycc += $(flag32)
 cycc += $(flag64)
@@ -175,6 +191,11 @@ apt64/apt-pkg/tagfile-keys.cc:
             --include "<apt-pkg/tagfile.h>" \
             ../apt64/apt-pkg/tagfile-keys.list
 	sed -i -e 's@typedef char static_assert64@//\\0@' $@
+
+Objects/%.o: %.cc $(header)
+	@mkdir -p $(dir $@)
+	@echo "[cycc] $<"
+	@$(cycc) $(plus) -c -o $@ $< $(flag) -Wno-format -include apt.h -Dmain=main_$(basename $(notdir $@))
 
 Objects/apt32/%.o: apt32/%.cc $(header) apt.h apt-extra/*.h
 	@mkdir -p $(dir $@)
@@ -277,7 +298,8 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	cp -a MobileCydia.app _/Applications/Cydia.app
 	rm -rf _/Applications/Cydia.app/*.lproj
 	cp -a MobileCydia _/Applications/Cydia.app/Cydia
-	ln -s Cydia _/Applications/Cydia.app/store
+	
+	for meth in bzip2 gzip lzma gpgv http https store $(methods); do ln -s Cydia _/Applications/Cydia.app/"$${meth}"; done
 	
 	cd MobileCydia.app && find . -name '*.png' -exec cp -af ../Images/MobileCydia.app/{} ../_/Applications/Cydia.app/{} ';'
 	

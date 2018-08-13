@@ -9191,17 +9191,47 @@ static NSMutableDictionary *AutoreleaseDeepMutableCopyOfDictionary(CFTypeRef typ
     return [(NSMutableDictionary *) copy autorelease];
 }
 
+int main_copy();
+int main_file();
+int main_gpgv();
+int main_rred(int, char *argv[]);
+
+int main_gzip(int, char *argv[]);
+
 int main_store(int, char *argv[]);
 
+int main_http();
+
 int main(int argc, char *argv[]) {
-#ifdef __arm64__
     const char *argv0(argv[0]);
     if (const char *slash = strrchr(argv0, '/'))
         argv0 = slash + 1;
     if (false);
+    else if (!strcmp(argv0, "copy"))
+        return main_copy();
+    else if (!strcmp(argv0, "file"))
+        return main_file();
+    else if (!strcmp(argv0, "gpgv"))
+        return main_gpgv();
+    else if (!strcmp(argv0, "rred"))
+        return main_rred(argc, argv);
+#ifdef __arm__
+    else if (!strcmp(argv0, "bzip2"))
+        return main_gzip(argc, argv);
+    else if (!strcmp(argv0, "gzip"))
+        return main_gzip(argc, argv);
+    else if (!strcmp(argv0, "lzma"))
+        return main_gzip(argc, argv);
+#endif
+#ifdef __arm64__
     else if (!strcmp(argv0, "store"))
         return main_store(argc, argv);
 #endif
+    else if (!strcmp(argv0, "http"))
+        return main_http();
+    else if (!strcmp(argv0, "https"))
+        return main_http();
+    else {}
 
     int fd(open("/tmp/cydia.log", O_WRONLY | O_APPEND | O_CREAT, 0644));
     dup2(fd, 2);
@@ -9435,7 +9465,8 @@ int main(int argc, char *argv[]) {
 
     _config->Set("Acquire::AllowInsecureRepositories", true);
     _config->Set("Acquire::Check-Valid-Until", false);
-    _config->Set("Dir::Bin::Methods::store", "/Applications/Cydia.app/store");
+
+    _config->Set("Dir::Bin::Methods", "/Applications/Cydia.app");
 
     _config->Set("pkgCacheGen::ForceEssential", "");
 
