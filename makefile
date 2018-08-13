@@ -31,7 +31,7 @@ flag += -Xarch_arm64 -Iapt
 flag += -Xarch_arm64 -Iapt-contrib
 flag += -Xarch_arm64 -Iapt-deb
 flag += -Xarch_arm64 -Iapt-extra
-flag += -Xarch_arm64 -Iapt-tag
+flag += -Xarch_arm64 -IObjects/apt
 
 flag += -I.
 flag += -isystem sysroot/usr/include
@@ -95,7 +95,7 @@ libapt :=
 libapt += $(wildcard apt/apt-pkg/*.cc)
 libapt += $(wildcard apt/apt-pkg/deb/*.cc)
 libapt += $(wildcard apt/apt-pkg/contrib/*.cc)
-libapt += apt-tag/apt-pkg/tagfile-keys.cc
+libapt += Objects/apt/apt-pkg/tagfile-keys.cc
 libapt += apt/methods/store.cc
 libapt := $(filter-out %/srvrec.cc,$(libapt))
 libapt := $(patsubst %.cc,Objects/%.o,$(libapt))
@@ -132,6 +132,22 @@ all: MobileCydia
 clean:
 	rm -f MobileCydia postinst
 	rm -rf Objects/ Images/
+
+Objects/apt/apt-pkg/tagfile.o: Objects/apt/apt-pkg/tagfile-keys.cc
+Objects/apt/apt-pkg/deb/deblistparser.o: Objects/apt/apt-pkg/tagfile-keys.cc
+
+Objects/apt/apt-pkg/tagfile-keys.cc:
+	mkdir -p Objects/apt
+	cd Objects/apt && ../../apt/triehash/triehash.pl \
+            --ignore-case \
+            --header apt-pkg/tagfile-keys.h \
+            --code apt-pkg/tagfile-keys.cc \
+            --enum-class \
+            --enum-name pkgTagSection::Key \
+            --function-name pkgTagHash \
+            --include "<apt-pkg/tagfile.h>" \
+            ../../apt/apt-pkg/tagfile-keys.list
+	sed -i -e 's@typedef char static_assert64@//\\0@' $@
 
 Objects/%.o: %.cc $(header) apt.h apt-extra/*.h
 	@mkdir -p $(dir $@)
