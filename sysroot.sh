@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 if [[ ${BASH_VERSION} != 4* ]]; then
     echo "bash 4.0 required" 1>&2
     exit 1
@@ -100,9 +102,9 @@ mkdir -p usr/include
 cd usr/include
 
 mkdir CoreFoundation
-wget -O CoreFoundation/CFUniChar.h "http://www.opensource.apple.com/source/CF/CF-550/CFUniChar.h?txt"
+wget --no-check-certificate -O CoreFoundation/CFUniChar.h "https://opensource.apple.com/source/CF/CF-550/CFUniChar.h"
 
 mkdir -p WebCore
-wget -O WebCore/WebCoreThread.h 'http://www.opensource.apple.com/source/WebCore/WebCore-658.28/wak/WebCoreThread.h?txt'
+wget --no-check-certificate -O WebCore/WebCoreThread.h "https://opensource.apple.com/source/WebCore/WebCore-658.28/wak/WebCoreThread.h"
 
 ln -s /System/Library/Frameworks/IOKit.framework/Headers IOKit
