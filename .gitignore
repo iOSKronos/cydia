@@ -9,6 +9,7 @@ Cydia_.deb
 debs
 .DS_Store
 *.o
+*.dSYM
 Images/
 Version.h
 cfversion
