@@ -19,6 +19,8 @@
 **/
 /* }}} */
 
+#include "CyteKit/UCPlatform.h"
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -31,6 +33,9 @@
 #include <sys/stat.h>
 
 #include <Menes/Function.h>
+
+struct timeval _ltv;
+bool _itv;
 
 typedef Function<void, const char *, launch_data_t> LaunchDataIterator;
 
