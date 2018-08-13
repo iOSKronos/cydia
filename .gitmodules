@@ -5,5 +5,8 @@
 	path = icu
 	url = git://git.saurik.com/apple/icu.git
 [submodule "apt"]
-	path = apt
+	path = apt64
 	url = git://git.saurik.com/apt.git
+[submodule "apt-legacy"]
+	path = apt32
+	url = git://git.saurik.com/apt-legacy.git

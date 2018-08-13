@@ -17,9 +17,6 @@ cycc += -isysroot $(sdk)
 cycc += -idirafter /usr/include
 cycc += -F$(sdk)/System/Library/PrivateFrameworks
 
-cycc += -arch arm64
-cycc += -Xarch_arm64 -miphoneos-version-min=7.0
-
 cycc += -fmessage-length=0
 cycc += -gfull -O2
 cycc += -fvisibility=hidden
@@ -27,11 +24,17 @@ cycc += -fvisibility=hidden
 link += -Wl,-dead_strip
 link += -Wl,-no_dead_strip_inits_and_terms
 
-flag += -Xarch_arm64 -Iapt
-flag += -Xarch_arm64 -Iapt-contrib
-flag += -Xarch_arm64 -Iapt-deb
+flag += -Xarch_armv6 -Iapt32
+flag += -Xarch_armv6 -Iapt32-contrib
+flag += -Xarch_armv6 -Iapt32-deb
+flag += -Xarch_armv6 -Iapt-extra
+flag += -Xarch_armv6 -IObjects/apt32
+
+flag += -Xarch_arm64 -Iapt64
+flag += -Xarch_arm64 -Iapt64-contrib
+flag += -Xarch_arm64 -Iapt64-deb
 flag += -Xarch_arm64 -Iapt-extra
-flag += -Xarch_arm64 -IObjects/apt
+flag += -Xarch_arm64 -IObjects/apt64
 
 flag += -I.
 flag += -isystem sysroot/usr/include
@@ -51,7 +54,6 @@ flag += -Wno-unknown-warning-option
 plus += -fobjc-call-cxx-cdtors
 plus += -fvisibility-inlines-hidden
 
-link += -Lsysroot/usr/lib
 link += -multiply_defined suppress
 
 libs += -framework CoreFoundation
@@ -65,8 +67,9 @@ libs += -framework SystemConfiguration
 libs += -framework WebCore
 libs += -framework WebKit
 
-libs += -Xarch_armv6 -Wl,-lapt-pkg
-libs += -Xarch_arm64 -Wl,Objects/libapt64.a
+libs += -Xarch_armv6 -Wl,-force_load,Objects/libapt32.a
+libs += -Xarch_arm64 -Wl,-force_load,Objects/libapt64.a
+
 libs += -licucore
 
 uikit := 
@@ -91,36 +94,59 @@ object := $(object:.m=.o)
 object := $(object:.mm=.o)
 object := $(object:%=Objects/%)
 
-libapt := 
-libapt += $(wildcard apt/apt-pkg/*.cc)
-libapt += $(wildcard apt/apt-pkg/deb/*.cc)
-libapt += $(wildcard apt/apt-pkg/contrib/*.cc)
-libapt += Objects/apt/apt-pkg/tagfile-keys.cc
-libapt += apt/methods/store.cc
-libapt := $(filter-out %/srvrec.cc,$(libapt))
-libapt := $(patsubst %.cc,Objects/%.o,$(libapt))
+libapt32 := 
+libapt32 += $(wildcard apt32/apt-pkg/*.cc)
+libapt32 += $(wildcard apt32/apt-pkg/deb/*.cc)
+libapt32 += $(wildcard apt32/apt-pkg/contrib/*.cc)
+libapt32 := $(patsubst %.cc,Objects/%.o,$(libapt32))
 
-link += -Xarch_arm64 -Wl,-lz,-liconv
+libapt64 := 
+libapt64 += $(wildcard apt64/apt-pkg/*.cc)
+libapt64 += $(wildcard apt64/apt-pkg/deb/*.cc)
+libapt64 += $(wildcard apt64/apt-pkg/contrib/*.cc)
+libapt64 += apt64/apt-pkg/tagfile-keys.cc
+libapt64 += apt64/methods/store.cc
+libapt64 := $(filter-out %/srvrec.cc,$(libapt64))
+libapt64 := $(patsubst %.cc,Objects/%.o,$(libapt64))
+
+link += -Wl,-liconv
+link += -Xarch_arm64 -Wl,-lz
 
 flag += -DAPT_PKG_EXPOSE_STRING_VIEW
 flag += -Dsighandler_t=sig_t
 
-aptc := $(cycc) $(flag)
-aptc += -include apt.h
-aptc += -Wno-deprecated-register
-aptc += -Wno-unused-private-field
-aptc += -Wno-unused-variable
-
-cycc += -arch armv6
-cycc += -Xarch_armv6 -miphoneos-version-min=2.0
-flag += -Xarch_armv6 -marm # @synchronized
-flag += -Xarch_armv6 -mcpu=arm1176jzf-s
-flag += -mllvm -arm-reserve-r9
+flag32 := 
+flag32 += -arch armv6
+flag32 += -Xarch_armv6 -miphoneos-version-min=2.0
+flag32 += -Xarch_armv6 -marm # @synchronized
+flag32 += -Xarch_armv6 -mcpu=arm1176jzf-s
+flag32 += -mllvm -arm-reserve-r9
 link += -Xarch_armv6 -Wl,-lgcc_s.1
 
+flag64 := 
+flag64 += -arch arm64
+flag64 += -Xarch_arm64 -miphoneos-version-min=7.0
+
+apt32 := $(cycc) $(flag32) $(flag)
+apt32 += -include apt.h
+apt32 += -Wno-deprecated-register
+apt32 += -Wno-format-security
+apt32 += -Wno-tautological-compare
+apt32 += -Wno-uninitialized
+apt32 += -Wno-unused-private-field
+apt32 += -Wno-unused-variable
+apt32 += -D'VERSION="0.7.25.3"'
+
+apt64 := $(cycc) $(flag64) $(flag)
+apt64 += -include apt.h
+apt64 += -Wno-deprecated-register
+apt64 += -Wno-unused-private-field
+apt64 += -Wno-unused-variable
+
+cycc += $(flag32)
+cycc += $(flag64)
+
 plus += -std=c++11
-#plus += -Wp,-stdlib=libc++
-#link += libcxx/lib/libc++.a
 
 images := $(shell find MobileCydia.app/ -type f -name '*.png')
 images := $(images:%=Images/%)
@@ -133,26 +159,32 @@ clean:
 	rm -f MobileCydia postinst
 	rm -rf Objects/ Images/
 
-Objects/apt/apt-pkg/tagfile.o: Objects/apt/apt-pkg/tagfile-keys.cc
-Objects/apt/apt-pkg/deb/deblistparser.o: Objects/apt/apt-pkg/tagfile-keys.cc
+Objects/apt64/apt-pkg/tagfile.o: apt64/apt-pkg/tagfile-keys.cc
+Objects/apt64/apt-pkg/deb/deblistparser.o: apt64/apt-pkg/tagfile-keys.cc
 
-Objects/apt/apt-pkg/tagfile-keys.cc:
-	mkdir -p Objects/apt
-	cd Objects/apt && ../../apt/triehash/triehash.pl \
+apt64/apt-pkg/tagfile-keys.cc:
+	mkdir -p apt64
+	mkdir -p Objects/apt64/apt-pkg
+	cd apt64 && ../apt64/triehash/triehash.pl \
             --ignore-case \
-            --header apt-pkg/tagfile-keys.h \
+            --header ../Objects/apt64/apt-pkg/tagfile-keys.h \
             --code apt-pkg/tagfile-keys.cc \
             --enum-class \
             --enum-name pkgTagSection::Key \
             --function-name pkgTagHash \
             --include "<apt-pkg/tagfile.h>" \
-            ../../apt/apt-pkg/tagfile-keys.list
+            ../apt64/apt-pkg/tagfile-keys.list
 	sed -i -e 's@typedef char static_assert64@//\\0@' $@
 
-Objects/%.o: %.cc $(header) apt.h apt-extra/*.h
+Objects/apt32/%.o: apt32/%.cc $(header) apt.h apt-extra/*.h
 	@mkdir -p $(dir $@)
 	@echo "[cycc] $<"
-	@$(aptc) $(plus) -c -o $@ $< -Dmain=main_$(basename $(notdir $@))
+	@$(apt32) -c -o $@ $< -Dmain=main_$(basename $(notdir $@))
+
+Objects/apt64/%.o: apt64/%.cc $(header) apt.h apt-extra/*.h
+	@mkdir -p $(dir $@)
+	@echo "[cycc] $<"
+	@$(apt64) $(plus) -c -o $@ $< -Dmain=main_$(basename $(notdir $@))
 
 Objects/%.o: %.c $(header)
 	@mkdir -p $(dir $@)
@@ -186,11 +218,15 @@ sysroot: sysroot.sh
 	@echo 1>&2
 	@exit 1
 
-Objects/libapt64.a: $(libapt)
+Objects/libapt32.a: $(libapt32)
 	@echo "[arch] $@"
 	@ar -rc $@ $^
 
-MobileCydia: sysroot $(object) entitlements.xml Objects/libapt64.a
+Objects/libapt64.a: $(libapt64)
+	@echo "[arch] $@"
+	@ar -rc $@ $^
+
+MobileCydia: $(object) entitlements.xml Objects/libapt32.a Objects/libapt64.a
 	@echo "[link] $@"
 	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,8.0
 	@mkdir -p bins
