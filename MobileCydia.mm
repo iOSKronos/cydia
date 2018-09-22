@@ -7599,6 +7599,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 
     NSURLConnection *trivial_bz2_;
     NSURLConnection *trivial_gz_;
+    NSURLConnection *trivial_xz_;
 
     BOOL cydia_;
 }
@@ -7621,6 +7622,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 - (void) dealloc {
     [self _releaseConnection:trivial_gz_];
     [self _releaseConnection:trivial_bz2_];
+    [self _releaseConnection:trivial_xz_];
 
     [super dealloc];
 }
@@ -7746,13 +7748,16 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         field = &trivial_bz2_;
     else if (connection == trivial_gz_)
         field = &trivial_gz_;
+    else if (connection == trivial_xz_)
+        field = &trivial_xz_;
     _assert(field != NULL);
     [connection release];
     *field = nil;
 
     if (
         trivial_bz2_ == nil &&
-        trivial_gz_ == nil
+        trivial_gz_ == nil &&
+        trivial_xz_ == nil
     ) {
         NSString *warning(cydia_ ? [self yieldToSelector:@selector(getWarning)] : nil);
 
@@ -7871,6 +7876,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 
                 trivial_bz2_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.bz2"] method:@"HEAD"] retain];
                 trivial_gz_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.gz"] method:@"HEAD"] retain];
+                trivial_xz_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.xz"] method:@"HEAD"] retain];
 
                 cydia_ = false;
 
@@ -9417,6 +9423,7 @@ int main(int argc, char *argv[]) {
         CydiaAddSource(@"http://apt.thebigboss.org/repofiles/cydia/", @"stable", [NSMutableArray arrayWithObject:@"main"]);
         CydiaAddSource(@"http://apt.modmyi.com/", @"stable", [NSMutableArray arrayWithObject:@"main"]);
         CydiaAddSource(@"http://cydia.zodttd.com/repo/cydia/", @"stable", [NSMutableArray arrayWithObject:@"main"]);
+        CydiaAddSource(@"https://repo.chariz.io/", @"./");
 
         Version_ = [NSNumber numberWithUnsignedInt:1];
 
