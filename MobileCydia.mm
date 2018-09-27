@@ -1,5 +1,6 @@
 /* Cydia - iPhone UIKit Front-End for Debian APT
- * Copyright (C) 2008-2015  Jay Freeman (saurik)
+ * Original work Copyright (C) 2008-2017  Jay Freeman (saurik)
+ * Modified work Copyright (C) 2018       Sam Bingner (sbingner)
 */
 
 /* GNU General Public License, Version 3 {{{ */
@@ -4620,7 +4621,8 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
             pkgCache::PkgIterator package(dep.TargetPkg());
             if (package.end())
                 continue;
-            if (strcmp(package.Name(), "mobilesubstrate") == 0)
+            if (strcmp(package.Name(), "mobilesubstrate") == 0 ||
+                strcmp(package.Name(), "com.ex.substitute") == 0)
                 return true;
         }
 
@@ -6283,12 +6285,18 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     [alert setCancelButtonIndex:0];
 
     [alert setMessage:
-        @"Copyright \u00a9 2008-2015\n"
+        @"Original work Copyright \u00a9 2008-2017\n"
         "SaurikIT, LLC\n"
         "\n"
         "Jay Freeman (saurik)\n"
         "saurik@saurik.com\n"
-        "http://www.saurik.com/"
+        "http://www.saurik.com/\n\n"
+        "Modified work Copyright \u00a9 2018\n"
+        "SB Designs, INC\n"
+        "\n"
+        "Sam Bingner (sbingner)\n"
+        "sam@bingner.com\n"
+        "http://www.bingner.com/"
     ];
 
     [alert show];
@@ -8987,8 +8995,7 @@ _end
     [window_ makeKey:self];
     [window_ setHidden:NO];
 
-    if (access("/.cydia_no_stash", F_OK) == 0);
-    else {
+    if (kCFCoreFoundationVersionNumber < 1349.56 && access("/.cydia_no_stash", F_OK) != 0) {
 
     if (false) stash: {
         [self addStashController];
