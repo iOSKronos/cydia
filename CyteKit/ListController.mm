@@ -155,6 +155,8 @@ static CGFloat CYStatusBarHeight() {
     [self setView:view];
 
     list_ = [[[UITableView alloc] initWithFrame:[[self view] bounds] style:UITableViewStylePlain] autorelease];
+    if ([list_ respondsToSelector:@selector(setCellLayoutMarginsFollowReadableWidth:)])
+        [list_ setCellLayoutMarginsFollowReadableWidth:NO];
     [list_ setAutoresizingMask:(UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight)];
     [view addSubview:list_];
 

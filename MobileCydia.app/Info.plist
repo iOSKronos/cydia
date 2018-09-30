@@ -48,6 +48,12 @@
     <key>DTSDKName</key>
     <string>iphoneos2.0.saurik</string>
 
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+
     <key>DTPlatformVersion</key>
     <string>8.0</string>
 

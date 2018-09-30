@@ -84,6 +84,7 @@
 
     // Load on first appearance. We don't need to set the loaded flag here
     // because it is set for us the first time -reloadData is called.
+    self.navigationController.navigationBar.prefersLargeTitles = YES;
     if (![self hasLoaded])
         [self reloadData];
 }

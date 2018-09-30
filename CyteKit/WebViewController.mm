@@ -213,6 +213,7 @@ static _H<NSMutableSet> Diversions_;
 
 + (void) _initialize {
     [WebPreferences _setInitialDefaultTextEncodingToSystemEncoding];
+    [WebPreferences setWebKitLinkTimeVersion:PACKED_VERSION(3453,0,0)];
 
     void *js(NULL);
     if (js == NULL)

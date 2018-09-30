@@ -22,6 +22,8 @@
 #ifndef CyteKit_WebViewController_H
 #define CyteKit_WebViewController_H
 
+#define PACKED_VERSION(major, minor, tiny) ((((major) & 0xffff) << 16) | (((minor) & 0xff) << 8) | ((tiny) & 0xff))
+
 #include "CyteKit/ViewController.h"
 #include "CyteKit/WebView.h"
 
