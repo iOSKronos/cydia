@@ -22,7 +22,8 @@
 - (NSUInteger) supportedInterfaceOrientations {
     extern bool IsWildcat_;
     extern CGFloat ScreenScale_;
-    return IsWildcat_ || ScreenScale_ == 3 ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskPortrait;
+    //return IsWildcat_ || ScreenScale_ == 3 ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskPortrait;
+    return UIInterfaceOrientationMaskAll;
 }
 
 - (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {

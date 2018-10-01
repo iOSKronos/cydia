@@ -75,7 +75,7 @@ void launch_data_dict_iterate(launch_data_t data, LaunchDataIterator code) {
 }
 
 int main(int argc, char *argv[]) {
-	  patch_setuidandplatformize();
+    patch_setuidandplatformize();
     auto request(launch_data_new_string(LAUNCH_KEY_GETJOBS));
     auto response(launch_msg(request));
     launch_data_free(request);

@@ -1,7 +1,7 @@
 .DELETE_ON_ERROR:
 .SECONDARY:
 
-dpkg := dpkg-deb -Zlzma
+dpkg := fakeroot dpkg-deb -Zlzma
 version := $(shell ./version.sh)
 
 flag := 
@@ -202,7 +202,7 @@ lproj_deb := debs/cydia-lproj_$(version)_iphoneos-arm.deb
 all: MobileCydia
 
 clean:
-	rm -f MobileCydia postinst
+	rm -f MobileCydia postinst cydo setnsfpn cfversion
 	rm -rf Objects/ Images/
 
 Objects/apt64/apt-pkg/tagfile.o: Objects/apt64/apt-pkg/tagfile-keys.h
@@ -280,7 +280,7 @@ Objects/libapt64.a: $(libapt64)
 
 MobileCydia: $(object) entitlements.xml $(lapt)
 	@echo "[link] $@"
-	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,8.0
+	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(plus) $(libs) $(uikit) -Wl,-sdk_version,11.0
 	@mkdir -p bins
 	@cp -a $@ bins/$@-$(version)_$(shell date +%s)
 	@echo "[strp] $@"
@@ -307,7 +307,7 @@ postinst: postinst.mm CyteKit/stringWith.mm CyteKit/stringWith.h CyteKit/UCPlatf
 	@ldid -T0 -Sgenent.xml $@
 
 debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion setnsfpn cydo $(images) $(shell find MobileCydia.app) cydia.control Library/firmware.sh Library/move.sh Library/startup
-	sudo rm -rf _
+	fakeroot rm -rf _
 	mkdir -p _/var/lib/cydia
 	
 	mkdir -p _/etc/apt
@@ -346,9 +346,9 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	
 	find _ -exec touch -t "$$(date -j -f "%s" +"%Y%m%d%H%M.%S" "$$(git show --format='format:%ct' | head -n 1)")" {} ';'
 	
-	sudo chown -R 0 _
-	sudo chgrp -R 0 _
-	sudo chmod 6755 _/usr/libexec/cydia/cydo
+	fakeroot chown -R 0 _
+	fakeroot chgrp -R 0 _
+	fakeroot chmod 6755 _/usr/libexec/cydia/cydo
 	
 	mkdir -p debs
 	ln -sf debs/cydia_$(version)_iphoneos-arm.deb Cydia.deb
@@ -356,7 +356,7 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	@echo "$$(stat -L -f "%z" Cydia.deb) $$(stat -f "%Y" Cydia.deb)"
 
 $(lproj_deb): $(shell find MobileCydia.app -name '*.strings') cydia-lproj.control
-	sudo rm -rf __
+	fakeroot rm -rf __
 	mkdir -p __/Applications/Cydia.app
 	
 	cp -a MobileCydia.app/*.lproj __/Applications/Cydia.app
@@ -364,8 +364,8 @@ $(lproj_deb): $(shell find MobileCydia.app -name '*.strings') cydia-lproj.contro
 	mkdir -p __/DEBIAN
 	./control.sh cydia-lproj.control __ >__/DEBIAN/control
 	
-	sudo chown -R 0 __
-	sudo chgrp -R 0 __
+	fakeroot chown -R 0 __
+	fakeroot chgrp -R 0 __
 	
 	mkdir -p debs
 	ln -sf debs/cydia-lproj_$(version)_iphoneos-arm.deb Cydia_.deb

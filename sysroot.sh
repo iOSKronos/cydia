@@ -39,13 +39,14 @@ architecture=iphoneos-arm
 declare -A dpkgz
 dpkgz[gz]=gunzip
 dpkgz[lzma]=unlzma
+dpkgz[xz]=unxz
 
 function extract() {
     package=$1
     url=$2
 
-    wget -O "${package}.deb" "${url}"
-    for z in lzma gz; do
+    wget -O "${package}.deb" "${url}" --no-check-certificate
+    for z in lzma gz xz; do
         compressed=data.tar.${z}
 
         if ar -x "${package}.deb" "${compressed}" 2>/dev/null; then

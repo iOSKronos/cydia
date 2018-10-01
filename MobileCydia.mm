@@ -64,7 +64,6 @@
 
 #undef ABS
 
-#include "apt.h"
 #include <apt-pkg/acquire.h>
 #include <apt-pkg/acquire-item.h>
 #include <apt-pkg/algorithms.h>

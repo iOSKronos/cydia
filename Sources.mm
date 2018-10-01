@@ -42,13 +42,21 @@ void CydiaWriteSources() {
     FILE *file(fopen(sources, "w"));
     _assert(file != NULL);
 
-    fprintf(file, "deb http://apt.bingner.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);
+    if (kCFCoreFoundationVersionNumber >= 1443) {
+        fprintf(file, "deb https://apt.bingner.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);
+    } else {
+        fprintf(file, "deb http://apt.saurik.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);
+        fprintf(file, "deb https://apt.bingner.com/ ./\n");
+    }
 
     for (NSString *key in [Sources_ allKeys]) {
         if ([key hasPrefix:@"deb:http:"] && [Sources_ objectForKey:[NSString stringWithFormat:@"deb:https:%s", [key UTF8String] + 9]])
             continue;
 
         NSDictionary *source([Sources_ objectForKey:key]);
+        // Ignore it if main source is added again
+        if ([[source objectForKey:@"URI"] hasPrefix:@"http://apt.bingner.com"] || [[source objectForKey:@"URI"] hasPrefix:@"https://apt.bingner.com"])
+            continue;
 
         NSArray *sections([source objectForKey:@"Sections"] ?: [NSArray array]);
 
