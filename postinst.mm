@@ -43,6 +43,18 @@ void Finish(const char *finish) {
     fclose(fout);
 }
 
+void UICache() {
+    const char *cydia(getenv("CYDIA"));
+    if (cydia == NULL)
+        return;
+
+    int fd([[[[NSString stringWithUTF8String:cydia] componentsSeparatedByString:@" "] objectAtIndex:0] intValue]);
+
+    FILE *fout(fdopen(fd, "w"));
+    fprintf(fout, "uicache:yes\n");
+    fclose(fout);
+}
+
 static bool setnsfpn(const char *path) {
     return system([[NSString stringWithFormat:@"/usr/libexec/cydia/setnsfpn %s", path] UTF8String]) == 0;
 }
@@ -197,8 +209,14 @@ static bool FixApplications() {
 }
 
 int main(int argc, const char *argv[]) {
-    if (argc < 2 || strcmp(argv[1], "configure") != 0)
+    if (argc < 2)
         return 0;
+    if (strcmp(argv[1], "triggered") == 0)
+        UICache();
+    if (strcmp(argv[1], "configure") != 0)
+        return 0;
+
+    UICache();
 
     platformize_me();
 
@@ -240,12 +258,24 @@ int main(int argc, const char *argv[]) {
 
     #define CYDIA_LIST "/etc/apt/sources.list.d/cydia.list"
     unlink(CYDIA_LIST);
-    [[NSString stringWithFormat:@
-        "deb http://apt.saurik.com/ ios/%.2f main\n"
-        "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
-        "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
-        "deb http://apt.modmyi.com/ stable main\n"
-    , kCFCoreFoundationVersionNumber] writeToFile:@ CYDIA_LIST atomically:YES];
+    if (kCFCoreFoundationVersionNumber >= 1443) {
+        [@(
+            "deb http://apt.bingner.com/ ./\n"
+            "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
+            "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
+            "deb http://apt.modmyi.com/ stable main\n"
+            "deb https://repo.chariz.io/ ./\n"
+	) writeToFile:@ CYDIA_LIST atomically:YES];
+    } else {
+        [[NSString stringWithFormat:@
+            "deb http://apt.saurik.com/ ios/%.2f main\n"
+            "deb http://apt.bingner.com/ ./\n"
+            "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
+            "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
+            "deb http://apt.modmyi.com/ stable main\n"
+            "deb https://repo.chariz.io/ ./\n"
+        , kCFCoreFoundationVersionNumber] writeToFile:@ CYDIA_LIST atomically:YES];
+    }
 
     if (access(NewLibrary_ Cytore_, F_OK) != 0 && errno == ENOENT) {
         if (access(NewCache_ Cytore_, F_OK) == 0)

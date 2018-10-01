@@ -589,6 +589,7 @@ static int PulseInterval_ = 500000;
 static const NSString *UI_;
 
 static int Finish_;
+static bool UICache_ = false;
 static bool RestartSubstrate_;
 static NSArray *Finishes_;
 
@@ -3378,6 +3379,7 @@ class CydiaLogCleaner :
     std::string line;
 
     static RegEx finish_r("finish:([^:]*)");
+    static RegEx uicache_r("uicache:(1|[Yy][Ee][Ss])");
 
     while (std::getline(is, line)) {
         NSAutoreleasePool *pool([[NSAutoreleasePool alloc] init]);
@@ -3391,6 +3393,8 @@ class CydiaLogCleaner :
             int index = [Finishes_ indexOfObject:finish];
             if (index != INT_MAX && index > Finish_)
                 Finish_ = index;
+        } else if (uicache_r(data, size)) {
+            UICache_ = true;
         }
 
         [pool release];
@@ -8565,7 +8569,10 @@ _end
 - (void) perform_ {
     [database_ perform];
     [self performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
-    [self performSelectorOnMainThread:@selector(uicache) withObject:nil waitUntilDone:YES];
+    if (UICache_) {
+        UICache_ = false;
+        [self performSelectorOnMainThread:@selector(uicache) withObject:nil waitUntilDone:YES];
+    }
 }
 
 - (void) confirmWithNavigationController:(UINavigationController *)navigation {

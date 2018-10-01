@@ -342,7 +342,7 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	
 	mkdir -p _/DEBIAN
 	./control.sh cydia.control _ >_/DEBIAN/control
-	cp -a preinst postinst _/DEBIAN/
+	cp -a preinst postinst triggers _/DEBIAN/
 	
 	find _ -exec touch -t "$$(date -j -f "%s" +"%Y%m%d%H%M.%S" "$$(git show --format='format:%ct' | head -n 1)")" {} ';'
 	
