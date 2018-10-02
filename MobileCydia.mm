@@ -7052,6 +7052,8 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
             return false;
         if (![package unfiltered])
             return false;
+        if ([query length] > [[package name] length])
+            return false;
         if ([[package name] compare:query options:MatchCompareOptions_ range:NSMakeRange(0, [query length])] != NSOrderedSame)
             return false;
         return true;
