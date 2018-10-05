@@ -281,6 +281,7 @@ enum {
 // }}}
 // @interface Web* {{{
 @interface WebPreferences : NSObject
++ (void) setWebKitLinkTimeVersion:(NSInteger)version;
 - (void) setCacheModel:(WebCacheModel)value;
 - (void) setJavaScriptCanOpenWindowsAutomatically:(BOOL)value;
 @end
