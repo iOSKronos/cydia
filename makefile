@@ -13,8 +13,10 @@ gxx := $(shell xcrun --sdk iphoneos -f g++)
 cycc := $(gxx)
 
 sdk := $(shell xcodebuild -sdk iphoneos -version Path)
+mac := $(shell xcodebuild -sdk macosx -version Path)
+
 cycc += -isysroot $(sdk)
-cycc += -idirafter /usr/include
+cycc += -idirafter $(mac)/usr/include
 cycc += -F$(sdk)/System/Library/PrivateFrameworks
 
 cycc += -fmessage-length=0
