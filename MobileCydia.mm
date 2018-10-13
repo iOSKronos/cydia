@@ -9263,6 +9263,9 @@ int main(int argc, char *argv[]) {
         return main_http();
     else {}
 
+    if ([WebPreferences respondsToSelector:@selector(setWebKitLinkTimeVersion:)])
+                [WebPreferences setWebKitLinkTimeVersion:PACKED_VERSION(3453,0,0)];
+
     int fd(open("/tmp/cydia.log", O_WRONLY | O_APPEND | O_CREAT, 0644));
     dup2(fd, 2);
     close(fd);
@@ -9445,6 +9448,7 @@ int main(int argc, char *argv[]) {
         CydiaAddSource(@"http://apt.modmyi.com/", @"stable", [NSMutableArray arrayWithObject:@"main"]);
         CydiaAddSource(@"http://cydia.zodttd.com/repo/cydia/", @"stable", [NSMutableArray arrayWithObject:@"main"]);
         CydiaAddSource(@"https://repo.chariz.io/", @"./");
+        CydiaAddSource(@"https://repo.dynastic.co/", @"./");
 
         Version_ = [NSNumber numberWithUnsignedInt:1];
 

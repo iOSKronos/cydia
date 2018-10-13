@@ -3,3 +3,4 @@ deb http://apt.thebigboss.org/repofiles/cydia/ stable main
 deb http://cydia.zodttd.com/repo/cydia/ stable main
 deb http://apt.modmyi.com/ stable main
 deb https://repo.chariz.io/ ./
+deb https://repo.dynastic.co/ ./
