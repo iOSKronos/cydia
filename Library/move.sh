@@ -77,4 +77,7 @@ function shift_() {
     fi
 }
 
-shift_ "$@"
+CFVERSION=$(cfversion)
+if [[ ${CFVERSION%.*} -lt 1349 || "$(uname -p)" == "arm" && ${CFVERSION%.*} -lt 1440 ]]; then
+    shift_ "$@"
+fi
