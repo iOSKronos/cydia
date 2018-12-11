@@ -256,6 +256,7 @@ int main(int argc, const char *argv[]) {
 
     #define Cytore_ "/metadata.cb0"
 
+    unlink("/etc/apt/sources.list.d/electra.list");
     #define CYDIA_LIST "/etc/apt/sources.list.d/cydia.list"
     unlink(CYDIA_LIST);
     if (kCFCoreFoundationVersionNumber >= 1443) {
