@@ -260,14 +260,14 @@ int main(int argc, const char *argv[]) {
     #define CYDIA_LIST "/etc/apt/sources.list.d/cydia.list"
     unlink(CYDIA_LIST);
     if (kCFCoreFoundationVersionNumber >= 1443) {
-        [@(
-            "deb https://apt.bingner.com/ ./\n"
+        [[NSString stringWithFormat:@
+            "deb https://apt.bingner.com/ ios/%.2f main\n"
             "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
             "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
             "deb http://apt.modmyi.com/ stable main\n"
             "deb https://repo.chariz.io/ ./\n"
             "deb https://repo.dynastic.co/ ./\n"
-	) writeToFile:@ CYDIA_LIST atomically:YES];
+	, kCFCoreFoundationVersionNumber] writeToFile:@ CYDIA_LIST atomically:YES];
     } else {
         [[NSString stringWithFormat:@
             "deb http://apt.saurik.com/ ios/%.2f main\n"
