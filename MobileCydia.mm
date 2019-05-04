@@ -749,7 +749,8 @@ bool isSectionVisible(NSString *section) {
 
 static NSString *VerifySource(NSString *href) {
     static RegEx href_r("(http(s?)://|file:///)[^# ]*");
-    if (!href_r(href) || [href rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+    if (!href_r(href) || [href rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+            [href rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound) {
         [[[[UIAlertView alloc]
             initWithTitle:[NSString stringWithFormat:Colon_, Error_, UCLocalize("INVALID_URL")]
             message:UCLocalize("INVALID_URL_EX")

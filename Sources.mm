@@ -59,7 +59,8 @@ void CydiaWriteSources() {
             continue;
 
         // Don't add Electra sources
-        if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound)
+        if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+            [[source objectForKey:@"URI"] rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound)
             continue;
 
         NSArray *sections([source objectForKey:@"Sections"] ?: [NSArray array]);
@@ -82,7 +83,8 @@ void CydiaAddSource(NSDictionary *source) {
         return;
 
     // Don't add Electra sources
-    if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound)
+    if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+        [[source objectForKey:@"URI"] rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound)
         return;
 
     [Sources_ setObject:source forKey:[NSString stringWithFormat:@"%@:%@:%@", [source objectForKey:@"Type"], [source objectForKey:@"URI"], [source objectForKey:@"Distribution"]]];
