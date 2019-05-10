@@ -43,7 +43,7 @@ void CydiaWriteSources() {
     _assert(file != NULL);
 
     if (kCFCoreFoundationVersionNumber >= 1443) {
-        fprintf(file, "deb https://apt.bingner.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);
+        fprintf(file, "deb https://apt.bingner.com/ ./\n");
     } else {
         fprintf(file, "deb http://apt.saurik.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);
         fprintf(file, "deb https://apt.bingner.com/ ./\n");
@@ -56,11 +56,6 @@ void CydiaWriteSources() {
         NSDictionary *source([Sources_ objectForKey:key]);
         // Ignore it if main source is added again
         if ([[source objectForKey:@"URI"] hasPrefix:@"http://apt.bingner.com"] || [[source objectForKey:@"URI"] hasPrefix:@"https://apt.bingner.com"])
-            continue;
-
-        // Don't add Electra sources
-        if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-            [[source objectForKey:@"URI"] rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound)
             continue;
 
         NSArray *sections([source objectForKey:@"Sections"] ?: [NSArray array]);
@@ -80,11 +75,6 @@ void CydiaWriteSources() {
 void CydiaAddSource(NSDictionary *source) {
     // Ignore it if main source is added again
     if ([[source objectForKey:@"URI"] hasPrefix:@"http://apt.bingner.com"] || [[source objectForKey:@"URI"] hasPrefix:@"https://apt.bingner.com"])
-        return;
-
-    // Don't add Electra sources
-    if ([[source objectForKey:@"URI"] rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-        [[source objectForKey:@"URI"] rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound)
         return;
 
     [Sources_ setObject:source forKey:[NSString stringWithFormat:@"%@:%@:%@", [source objectForKey:@"Type"], [source objectForKey:@"URI"], [source objectForKey:@"Distribution"]]];

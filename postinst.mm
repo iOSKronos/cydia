@@ -256,13 +256,11 @@ int main(int argc, const char *argv[]) {
 
     #define Cytore_ "/metadata.cb0"
 
-    unlink("/etc/apt/sources.list.d/electra.list");
-    unlink("/etc/apt/sources.list.d/chimera.list");
     #define CYDIA_LIST "/etc/apt/sources.list.d/cydia.list"
     unlink(CYDIA_LIST);
     if (kCFCoreFoundationVersionNumber >= 1443) {
         [[NSString stringWithFormat:@
-            "deb https://apt.bingner.com/ ios/%.2f main\n"
+            "deb https://apt.bingner.com/ ./\n"
             "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
             "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
             "deb http://apt.modmyi.com/ stable main\n"

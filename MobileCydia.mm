@@ -749,8 +749,7 @@ bool isSectionVisible(NSString *section) {
 
 static NSString *VerifySource(NSString *href) {
     static RegEx href_r("(http(s?)://|file:///)[^# ]*");
-    if (!href_r(href) || [href rangeOfString:@"electra" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-            [href rangeOfString:@"chimera" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+    if (!href_r(href)) {
         [[[[UIAlertView alloc]
             initWithTitle:[NSString stringWithFormat:Colon_, Error_, UCLocalize("INVALID_URL")]
             message:UCLocalize("INVALID_URL_EX")
@@ -2542,6 +2541,14 @@ struct PackageNameOrdering :
             essential_ |= ((iterator->Flags & pkgCache::Flag::Essential) == 0 ? NO : YES);
             ignored_ = iterator->SelectedState == pkgCache::State::Hold;
         _end
+
+        _profile(Package$initWithVersion$Priority)
+            // ignore "essential" tags from non-pinned repos
+            if (essential_ && [database cache].Policy->GetPriority(version, true) == 500) {
+                essential_ = NO;
+            }
+        _end
+
     _end } return self;
 }
 
@@ -2549,7 +2556,7 @@ struct PackageNameOrdering :
     pkgCache::VerIterator version;
 
     _profile(Package$packageWithIterator$GetCandidateVer)
-        version = [database policy]->GetCandidateVer(iterator);
+        version = [database cache]->GetCandidateVersion(iterator);
     _end
 
     if (version.end())
@@ -2756,7 +2763,7 @@ struct PackageNameOrdering :
                 return false;
             }
         } else {
-            return version_ != current;
+            return [database_ cache][iterator_].Upgradable();
         }
     _end
 }
@@ -4717,7 +4724,6 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
 
         pkgCacheFile &cache([database_ cache]);
         NSArray *packages([database_ packages]);
-        pkgDepCache::Policy *policy([database_ policy]);
 
         issues_ = [NSMutableArray arrayWithCapacity:4];
 
@@ -4832,7 +4838,7 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
                 [removes addObject:name];
             }
 
-            substrate_ |= DepSubstrate(policy->GetCandidateVer(iterator));
+            substrate_ |= DepSubstrate(cache->GetCandidateVersion(iterator));
             substrate_ |= DepSubstrate(iterator.CurrentVer());
         }
 
