@@ -33,6 +33,8 @@
 #include <objc/objc.h>
 #include <objc/runtime.h>
 
+#include <launch.h>
+
 #include <CoreGraphics/CoreGraphics.h>
 #include <Foundation/Foundation.h>
 
@@ -270,6 +272,35 @@ static _finline void UpdateExternalStatus(uint64_t newStatus) {
     notify_post("com.saurik.Cydia.status");
 }
 
+static _finline pid_t launch_get_job_pid(const char * job)
+{
+    launch_data_t resp;
+    launch_data_t msg;
+
+    msg = launch_data_alloc(LAUNCH_DATA_DICTIONARY);
+    if (msg == NULL) {
+        return -1;
+    }
+
+    launch_data_dict_insert(msg, launch_data_new_string(job), LAUNCH_KEY_GETJOB);
+
+    resp = launch_msg(msg);
+    launch_data_free(msg);
+
+    if (resp == NULL) {
+        return -1;
+    }
+
+    if (launch_data_get_type(resp) != LAUNCH_DATA_DICTIONARY) return -1;
+
+    launch_data_t pid_data = launch_data_dict_lookup(resp, "PID");
+    if (launch_data_get_type(pid_data) != LAUNCH_DATA_INTEGER) return -1;
+
+    pid_t pid = (pid_t)launch_data_get_integer(pid_data);
+    launch_data_free(resp);
+    return pid;
+}
+
 /* NSForcedOrderingSearch doesn't work on the iPhone */
 static const NSStringCompareOptions MatchCompareOptions_ = NSLiteralSearch | NSCaseInsensitiveSearch;
 static const NSStringCompareOptions LaxCompareOptions_ = NSNumericSearch | NSDiacriticInsensitiveSearch | NSWidthInsensitiveSearch | NSCaseInsensitiveSearch;
@@ -392,6 +423,22 @@ void CYArrayInsertionSortValues(Type_ *values, size_t length, CFComparisonResult
 
 @end
 /* }}} */
+
+@interface FBSSystemService
++(id)sharedService;
+-(void)sendActions:(NSSet*)actions withResult:(id)result;
+@end
+
+typedef enum {
+    None                   = 0,
+    RestartRenderServer    = (1 << 0), // also relaunch backboardd
+    SnapshotTransition     = (1 << 1),
+    FadeToBlackTransition  = (1 << 2),
+} SBSRelaunchActionStyle;
+
+@interface SBSRelaunchAction
++(id)actionWithReason:(id)reason options:(int64_t)options targetURL:(NSURL*)url;
+@end
 
 /* C++ NSString Wrapper Cache {{{ */
 static _finline CFStringRef CYStringCreate(const char *data, size_t size) {
@@ -8270,6 +8317,23 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 }
 
 - (void) reloadSpringBoard {
+    if (kCFCoreFoundationVersionNumber >= 1443) { // XXX: iOS 11.x
+        Class $SBSRelaunchAction = objc_getClass("SBSRelaunchAction");
+        Class $FBSSystemService = objc_getClass("FBSSystemService");
+        pid_t sb_pid = launch_get_job_pid("com.apple.SpringBoard");
+        if ($SBSRelaunchAction && $FBSSystemService) {
+            id action = [$SBSRelaunchAction actionWithReason:@"respring" options:RestartRenderServer targetURL:nil];
+            id sharedService = [$FBSSystemService sharedService];
+            [sharedService sendActions:[NSSet setWithObject:action] withResult:nil];
+            for (int i=0; i<100; i++) {
+                if (kill(sb_pid, 0)) {
+                    break;
+                }
+                usleep(1000);
+            }
+            if (kill(sb_pid, 0)) sleep(5);
+        }
+    }
     if (kCFCoreFoundationVersionNumber >= 700) // XXX: iOS 6.x
         system("/usr/libexec/cydia/cydo /bin/launchctl stop com.apple.backboardd");
     else
