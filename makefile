@@ -8,6 +8,7 @@ flag :=
 plus :=
 link := 
 libs := 
+lapt := 
 
 gxx := $(shell xcrun --sdk iphoneos -f g++)
 cycc := $(gxx)
@@ -18,6 +19,8 @@ mac := $(shell xcodebuild -sdk macosx -version Path)
 cycc += -isysroot $(sdk)
 cycc += -idirafter $(mac)/usr/include
 cycc += -F$(sdk)/System/Library/PrivateFrameworks
+
+cycc += -include system.h
 
 cycc += -fmessage-length=0
 cycc += -gfull -O2
@@ -33,7 +36,10 @@ iapt += -Iapt32-deb
 iapt += -Iapt-extra
 iapt += -IObjects/apt32
 
+ifeq ($(do32),yes)
 flag += $(patsubst %,-Xarch_armv6 %,$(iapt))
+endif
+
 flag += $(patsubst %,-Xarch_arm64 %,$(subst apt32,apt64,$(iapt)))
 
 flag += -I.
@@ -70,15 +76,18 @@ libs += -framework WebKit
 libs += -framework CFNetwork
 libs += -llockdown
 
+ifeq ($(do32),yes)
 libs += -Xarch_armv6 -Wl,-force_load,Objects/libapt32.a
+lapt += Objects/libapt32.a
+endif
+
 libs += -Xarch_arm64 -Wl,-force_load,Objects/libapt64.a
+lapt += Objects/libapt64.a
 
 libs += -licucore
 
 uikit := 
 uikit += -framework UIKit
-
-link += -Xarch_armv6 -Wl,-segalign,4000
 
 dirs := Menes CyteKit Cydia SDURLCache
 
@@ -127,17 +136,16 @@ link += -Xarch_arm64 -Wl,-lz
 flag += -DAPT_PKG_EXPOSE_STRING_VIEW
 flag += -Dsighandler_t=sig_t
 
+ifeq ($(do32),yes)
 flag32 := 
 flag32 += -arch armv6
 flag32 += -Xarch_armv6 -miphoneos-version-min=2.0
 flag32 += -Xarch_armv6 -marm # @synchronized
 flag32 += -Xarch_armv6 -mcpu=arm1176jzf-s
 flag32 += -mllvm -arm-reserve-r9
-link += -Xarch_armv6 -Wl,-lgcc_s.1
 
-flag64 := 
-flag64 += -arch arm64
-flag64 += -Xarch_arm64 -miphoneos-version-min=7.0
+link += -Xarch_armv6 -Wl,-lgcc_s.1
+link += -Xarch_armv6 -Wl,-segalign,4000
 
 apt32 := $(cycc) $(flag32) $(flag)
 apt32 += -Wno-deprecated-register
@@ -146,6 +154,11 @@ apt32 += -Wno-tautological-compare
 apt32 += -Wno-uninitialized
 apt32 += -Wno-unused-private-field
 apt32 += -Wno-unused-variable
+endif
+
+flag64 := 
+flag64 += -arch arm64
+flag64 += -Xarch_arm64 -miphoneos-version-min=7.0
 
 apt64 := $(cycc) $(flag64) $(flag)
 apt64 += -include apt.h
@@ -161,7 +174,10 @@ eapt += -Wno-format
 eapt += -Wno-logical-op-parentheses
 iapt += $(eapt)
 
+ifeq ($(do32),yes)
 cycc += $(flag32)
+endif
+
 cycc += $(flag64)
 
 plus += -std=c++11
@@ -249,7 +265,7 @@ Objects/libapt64.a: $(libapt64)
 	@echo "[arch] $@"
 	@ar -rc $@ $^
 
-MobileCydia: $(object) entitlements.xml Objects/libapt32.a Objects/libapt64.a
+MobileCydia: $(object) entitlements.xml $(lapt)
 	@echo "[link] $@"
 	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,8.0
 	@mkdir -p bins

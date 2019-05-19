@@ -107,4 +107,4 @@ wget --no-check-certificate -O CoreFoundation/CFUniChar.h "https://opensource.ap
 mkdir -p WebCore
 wget --no-check-certificate -O WebCore/WebCoreThread.h "https://opensource.apple.com/source/WebCore/WebCore-658.28/wak/WebCoreThread.h"
 
-ln -s /System/Library/Frameworks/IOKit.framework/Headers IOKit
+ln -s "$(xcodebuild -sdk macosx -version Path)"/System/Library/Frameworks/IOKit.framework/Headers IOKit
