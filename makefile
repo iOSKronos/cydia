@@ -177,10 +177,10 @@ clean:
 	rm -f MobileCydia postinst
 	rm -rf Objects/ Images/
 
-Objects/apt64/apt-pkg/tagfile.o: apt64/apt-pkg/tagfile-keys.cc
-Objects/apt64/apt-pkg/deb/deblistparser.o: apt64/apt-pkg/tagfile-keys.cc
+Objects/apt64/apt-pkg/tagfile.o: Objects/apt64/apt-pkg/tagfile-keys.h
+Objects/apt64/apt-pkg/deb/deblistparser.o: Objects/apt64/apt-pkg/tagfile-keys.h
 
-apt64/apt-pkg/tagfile-keys.cc:
+Objects/apt64/apt-pkg/tagfile-keys%h apt64/apt-pkg/tagfile-keys%cc:
 	mkdir -p apt64
 	mkdir -p Objects/apt64/apt-pkg
 	cd apt64 && ../apt64/triehash/triehash.pl \
@@ -192,7 +192,7 @@ apt64/apt-pkg/tagfile-keys.cc:
             --function-name pkgTagHash \
             --include "<apt-pkg/tagfile.h>" \
             ../apt64/apt-pkg/tagfile-keys.list
-	sed -i -e 's@typedef char static_assert64@//\\0@' $@
+	sed -i -e 's@typedef char static_assert64@//\\0@' apt64/apt-pkg/tagfile-keys.cc
 
 Objects/%.o: %.cc $(header)
 	@mkdir -p $(dir $@)
