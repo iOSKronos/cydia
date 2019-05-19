@@ -105,6 +105,8 @@ static NSObject *CYIOGetValue(const char *path, NSString *property) {
 
 - (unsigned) bittage {
 #if 0
+#elif defined(__x86_64__)
+    return 64;
 #elif defined(__arm64__)
     return 64;
 #elif defined(__arm__)

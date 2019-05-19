@@ -10,15 +10,27 @@ link :=
 libs := 
 lapt := 
 
-gxx := $(shell xcrun --sdk iphoneos -f g++)
+ifeq ($(doIA),yes)
+kind := iphonesimulator
+arch := x86_64
+else
+kind := iphoneos
+arch := arm64
+endif
+
+gxx := $(shell xcrun --sdk $(kind) -f g++)
 cycc := $(gxx)
 
-sdk := $(shell xcodebuild -sdk iphoneos -version Path)
+sdk := $(shell xcodebuild -sdk $(kind) -version Path)
 mac := $(shell xcodebuild -sdk macosx -version Path)
 
 cycc += -isysroot $(sdk)
 cycc += -idirafter $(mac)/usr/include
 cycc += -F$(sdk)/System/Library/PrivateFrameworks
+
+ifeq ($(doIA),yes)
+cycc += -Xarch_x86_64 -F$(sdk)/../../../../iPhoneOS.platform/Developer/Library/CoreSimulator/Profiles/Runtimes/iOS.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks
+endif
 
 cycc += -include system.h
 
@@ -40,7 +52,7 @@ ifeq ($(do32),yes)
 flag += $(patsubst %,-Xarch_armv6 %,$(iapt))
 endif
 
-flag += $(patsubst %,-Xarch_arm64 %,$(subst apt32,apt64,$(iapt)))
+flag += $(patsubst %,-Xarch_$(arch) %,$(subst apt32,apt64,$(iapt)))
 
 flag += -I.
 flag += -isystem sysroot/usr/include
@@ -70,18 +82,18 @@ libs += -framework IOKit
 libs += -framework QuartzCore
 libs += -framework SpringBoardServices
 libs += -framework SystemConfiguration
-libs += -framework WebCore
 libs += -framework WebKit
 
 libs += -framework CFNetwork
-libs += -llockdown
 
 ifeq ($(do32),yes)
+libs += -framework WebCore
+libs += -llockdown
 libs += -Xarch_armv6 -Wl,-force_load,Objects/libapt32.a
 lapt += Objects/libapt32.a
 endif
 
-libs += -Xarch_arm64 -Wl,-force_load,Objects/libapt64.a
+libs += -Xarch_$(arch) -Wl,-force_load,Objects/libapt64.a
 lapt += Objects/libapt64.a
 
 libs += -licucore
@@ -131,7 +143,7 @@ libapt64 := $(filter-out %/srvrec.cc,$(libapt64))
 libapt64 := $(patsubst %.cc,Objects/%.o,$(libapt64))
 
 link += -Wl,-liconv
-link += -Xarch_arm64 -Wl,-lz
+link += -Xarch_$(arch) -Wl,-lz
 
 flag += -DAPT_PKG_EXPOSE_STRING_VIEW
 flag += -Dsighandler_t=sig_t
@@ -157,8 +169,8 @@ apt32 += -Wno-unused-variable
 endif
 
 flag64 := 
-flag64 += -arch arm64
-flag64 += -Xarch_arm64 -miphoneos-version-min=7.0
+flag64 += -arch $(arch)
+flag64 += -Xarch_$(arch) -m$(kind)-version-min=7.0
 
 apt64 := $(cycc) $(flag64) $(flag)
 apt64 += -include apt.h

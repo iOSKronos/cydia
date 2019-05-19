@@ -2454,7 +2454,7 @@ struct PackageNameOrdering :
         } while (false); _end
 
         _profile(Package$initWithVersion$Tags)
-#ifdef __arm64__
+#ifndef __arm__
             pkgCache::TagIterator tag(version_.TagList());
 #else
             pkgCache::TagIterator tag(iterator.TagList());
@@ -3480,7 +3480,7 @@ class CydiaLogCleaner :
     if (static_cast<pkgDepCache *>(cache_) == NULL)
         return nil;
     pkgCache::PkgIterator iterator(cache_->FindPkg([name UTF8String]
-#ifdef __arm64__
+#ifndef __arm__
         , "any"
 #endif
     ));
@@ -9223,7 +9223,7 @@ int main(int argc, char *argv[]) {
     else if (!strcmp(argv0, "lzma"))
         return main_gzip(argc, argv);
 #endif
-#ifdef __arm64__
+#ifndef __arm__
     else if (!strcmp(argv0, "store"))
         return main_store(argc, argv);
 #endif
