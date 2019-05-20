@@ -31,6 +31,7 @@
 #include "CyteKit/WebViewController.h"
 #include "CyteKit/countByEnumeratingWithState.h"
 #include "CyteKit/extern.h"
+#include "CyteKit/stringWith.h"
 
 #include "iPhonePrivate.h"
 #include <Menes/ObjectHandle.h>
@@ -371,7 +372,7 @@ static NSObject *CYIOGetValue(const char *path, NSString *property) {
     id values[count];
     for (unsigned i(0); i != count; ++i)
         values[i] = [arguments objectAtIndex:i];
-    return [[[NSString alloc] initWithFormat:format arguments:reinterpret_cast<va_list>(values)] autorelease];
+    return [NSString stringWithFormat:format :count :values];
 }
 
 - (BOOL) supports:(NSString *)feature {

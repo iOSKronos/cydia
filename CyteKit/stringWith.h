@@ -19,18 +19,15 @@
 **/
 /* }}} */
 
-#include "CyteKit/UCPlatform.h"
+#ifndef CyteKit_stringWith_H
+#define CyteKit_stringWith_H
 
-#include "CyteKit/stringWithUTF8Bytes.h"
+#include <Foundation/Foundation.h>
 
-@implementation NSString (Cyte)
-
-+ (NSString *) stringWithUTF8BytesNoCopy:(const char *)bytes length:(int)length {
-    return [[[NSString alloc] initWithBytesNoCopy:const_cast<char *>(bytes) length:length encoding:NSUTF8StringEncoding freeWhenDone:NO] autorelease];
-}
-
-+ (NSString *) stringWithUTF8Bytes:(const char *)bytes length:(int)length {
-    return [[[NSString alloc] initWithBytes:bytes length:length encoding:NSUTF8StringEncoding] autorelease];
-}
-
+@interface NSString (Cyte)
++ (NSString *) stringWithUTF8BytesNoCopy:(const char *)bytes length:(int)length;
++ (NSString *) stringWithUTF8Bytes:(const char *)bytes length:(int)length;
++ (NSString *) stringWithFormat:(NSString *)format :(size_t)count :(id *)args;
 @end
+
+#endif//CyteKit_stringWith_H

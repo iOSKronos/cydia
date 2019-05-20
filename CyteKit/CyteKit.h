@@ -36,7 +36,7 @@
 
 #include "CyteKit/countByEnumeratingWithState.h"
 #include "CyteKit/extern.h"
-#include "CyteKit/stringWithUTF8Bytes.h"
+#include "CyteKit/stringWith.h"
 #include "CyteKit/webScriptObjectInContext.h"
 
 #endif//CyteKit_CyteKit_H

@@ -25,7 +25,7 @@
 #include <unicode/uregex.h>
 
 #include "CyteKit/UCPlatform.h"
-#include "CyteKit/stringWithUTF8Bytes.h"
+#include "CyteKit/stringWith.h"
 
 #define _rgxcall(code, args...) ({ \
     UErrorCode status(U_ZERO_ERROR); \
@@ -124,7 +124,7 @@ class RegEx {
         id values[capture_];
         for (int i(0); i != capture_; ++i)
             values[i] = this->operator [](i + 1);
-        return [[[NSString alloc] initWithFormat:format arguments:reinterpret_cast<va_list>(values)] autorelease];
+        return [NSString stringWithFormat:format :capture_ :values];
     }
 };
 
