@@ -263,6 +263,7 @@ Images/%.png: %.png
 	@mkdir -p $(dir $@)
 	@echo "[pngc] $<"
 	@./pngcrush.sh $< $@
+	@touch $@
 
 sysroot: sysroot.sh
 	@echo "Your ./sysroot/ is either missing or out of date. Please read compiling.txt for help." 1>&2
