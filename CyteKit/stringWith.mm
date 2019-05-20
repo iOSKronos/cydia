@@ -36,23 +36,23 @@
 + (NSString *) stringWithFormat:(NSString *)format :(size_t)count :(id *)args {
     switch (count) {
         case 0:
-            return [[[NSString init] initWithFormat:format] autorelease];;
+            return [[[NSString alloc] initWithFormat:format] autorelease];;
         case 1:
-            return [[[NSString init] initWithFormat:format, args[0]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0]] autorelease];;
         case 2:
-            return [[[NSString init] initWithFormat:format, args[0], args[1]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1]] autorelease];;
         case 3:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2]] autorelease];;
         case 4:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2], args[3]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2], args[3]] autorelease];;
         case 5:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2], args[3], args[4]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2], args[3], args[4]] autorelease];;
         case 6:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5]] autorelease];;
         case 7:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5], args[6]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5], args[6]] autorelease];;
         case 8:
-            return [[[NSString init] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]] autorelease];;
+            return [[[NSString alloc] initWithFormat:format, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]] autorelease];;
         default:
             _assert(false);
     }
