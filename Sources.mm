@@ -28,11 +28,18 @@
 
 #include "Sources.h"
 
+NSString *Cache_;
+
+NSString *Cache(const char *file) {
+    return [NSString stringWithFormat:@"%@/%s", Cache_, file];
+}
+
 extern _H<NSMutableDictionary> Sources_;
 
 void CydiaWriteSources() {
-    unlink(SOURCES_LIST);
-    FILE *file(fopen(SOURCES_LIST, "w"));
+    auto sources([SOURCES_LIST UTF8String]);
+    unlink(sources);
+    FILE *file(fopen(sources, "w"));
     _assert(file != NULL);
 
     fprintf(file, "deb http://apt.saurik.com/ ios/%.2f main\n", kCFCoreFoundationVersionNumber);

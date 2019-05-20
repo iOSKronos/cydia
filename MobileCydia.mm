@@ -230,10 +230,6 @@ NSString *Elision_;
 static NSString *Error_;
 static NSString *Warning_;
 
-static NSString *Cache_;
-#define Cache(file) \
-    [NSString stringWithFormat:@"%@/%s", Cache_, file]
-
 static void (*$SBSSetInterceptsMenuButtonForever)(bool);
 static NSData *(*$SBSCopyIconImagePNGDataForDisplayIdentifier)(NSString *);
 
@@ -680,8 +676,8 @@ static CFLocaleRef Locale_;
 static NSArray *Languages_;
 static CGColorSpaceRef space_;
 
-#define CacheState_ "/var/mobile/Library/Caches/com.saurik.Cydia/CacheState.plist"
-#define SavedState_ "/var/mobile/Library/Caches/com.saurik.Cydia/SavedState.plist"
+#define CacheState_ Cache("CacheState.plist")
+#define SavedState_ Cache("SavedState.plist")
 
 static NSDictionary *SectionMap_;
 static _H<NSDate> Backgrounded_;
@@ -3631,7 +3627,7 @@ class CydiaLogCleaner :
         closedir(sources);
     }
 
-    error |= [self popErrorWithTitle:title forOperation:list.ReadAppend(SOURCES_LIST)];
+    error |= [self popErrorWithTitle:title forOperation:list.ReadAppend([SOURCES_LIST UTF8String])];
 
     return error;
 }
@@ -4087,7 +4083,7 @@ class CydiaLogCleaner :
 
         [[NSDictionary dictionaryWithObjectsAndKeys:
             [NSDate date], @"LastUpdate",
-        nil] writeToFile:@ CacheState_ atomically:YES];
+        nil] writeToFile:CacheState_ atomically:YES];
     }
 
     [delegate_ performSelectorOnMainThread:@selector(releaseNetworkActivityIndicator) withObject:nil waitUntilDone:YES];
@@ -8270,7 +8266,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 - (void) _refreshIfPossible {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    NSDate *update([[NSDictionary dictionaryWithContentsOfFile:@ CacheState_] objectForKey:@"LastUpdate"]);
+    NSDate *update([[NSDictionary dictionaryWithContentsOfFile:CacheState_] objectForKey:@"LastUpdate"]);
 
     bool recently = false;
     if (update != nil) {
@@ -8861,7 +8857,7 @@ _end
         @"InterfaceState", [tabbar_ navigationURLCollection],
         @"LastClosed", [NSDate date],
         @"InterfaceIndex", [NSNumber numberWithInt:[tabbar_ selectedIndex]],
-    nil] writeToFile:@ SavedState_ atomically:YES];
+    nil] writeToFile:SavedState_ atomically:YES];
 
     [self _saveConfig];
 }
@@ -9070,7 +9066,7 @@ _trace();
     [self refreshIfPossible];
     [self disemulate];
 
-    NSDictionary *state([NSDictionary dictionaryWithContentsOfFile:@ SavedState_]);
+    NSDictionary *state([NSDictionary dictionaryWithContentsOfFile:SavedState_]);
 
     int savedIndex = [[state objectForKey:@"InterfaceIndex"] intValue];
     NSArray *saved = [[[state objectForKey:@"InterfaceState"] mutableCopy] autorelease];
@@ -9417,9 +9413,9 @@ int main(int argc, char *argv[]) {
 
         Version_ = [NSNumber numberWithUnsignedInt:1];
 
-        if (NSMutableDictionary *cache = [NSMutableDictionary dictionaryWithContentsOfFile:@ CacheState_]) {
+        if (NSMutableDictionary *cache = [NSMutableDictionary dictionaryWithContentsOfFile:CacheState_]) {
             [cache removeObjectForKey:@"LastUpdate"];
-            [cache writeToFile:@ CacheState_ atomically:YES];
+            [cache writeToFile:CacheState_ atomically:YES];
         }
     }
 
@@ -9456,7 +9452,7 @@ int main(int argc, char *argv[]) {
             _assert(errno == ENOENT);
     }
 
-    system("/usr/libexec/cydia/cydo /bin/ln -sf /var/mobile/Library/Caches/com.saurik.Cydia/sources.list /etc/apt/sources.list.d/cydia.list");
+    system([[NSString stringWithFormat:@"/usr/libexec/cydia/cydo /bin/ln -sf %@ /etc/apt/sources.list.d/cydia.list", Cache("sources.list")] UTF8String]);
 
     /* APT Initialization {{{ */
     _assert(pkgInitConfig(*_config));
