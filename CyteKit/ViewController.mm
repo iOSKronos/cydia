@@ -84,10 +84,6 @@
 
     // Load on first appearance. We don't need to set the loaded flag here
     // because it is set for us the first time -reloadData is called.
-#ifdef __arm64__
-    if (@available(iOS 11, *))
-        self.navigationController.navigationBar.prefersLargeTitles = YES;
-#endif
     if (![self hasLoaded])
         [self reloadData];
 }
