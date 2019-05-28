@@ -86,9 +86,9 @@ libs += -framework WebKit
 
 libs += -framework CFNetwork
 
+libs += -llockdown
 ifeq ($(do32),yes)
 libs += -framework WebCore
-libs += -llockdown
 libs += -Xarch_armv6 -Wl,-force_load,Objects/libapt32.a
 lapt += Objects/libapt32.a
 endif
@@ -154,7 +154,7 @@ flag32 += -arch armv6
 flag32 += -Xarch_armv6 -miphoneos-version-min=2.0
 flag32 += -Xarch_armv6 -marm # @synchronized
 flag32 += -Xarch_armv6 -mcpu=arm1176jzf-s
-flag32 += -mllvm -arm-reserve-r9
+flag32 += -Xarch_armv6 -ffixed-r9
 
 link += -Xarch_armv6 -Wl,-lgcc_s.1
 link += -Xarch_armv6 -Wl,-segalign,4000
@@ -222,11 +222,6 @@ Objects/apt64/apt-pkg/tagfile-keys%h apt64/apt-pkg/tagfile-keys%cc:
             ../apt64/apt-pkg/tagfile-keys.list
 	sed -i -e 's@typedef char static_assert64@//\\0@' apt64/apt-pkg/tagfile-keys.cc
 
-Objects/%.o: %.cc $(header)
-	@mkdir -p $(dir $@)
-	@echo "[cycc] $<"
-	@$(cycc) $(plus) -c -o $@ $< $(flag) -Wno-format -include apt.h -Dmain=main_$(basename $(notdir $@))
-
 Objects/apt32/%.o: apt32/%.cc $(header) apt.h apt-extra/*.h
 	@mkdir -p $(dir $@)
 	@echo "[cycc] $<"
@@ -236,6 +231,11 @@ Objects/apt64/%.o: apt64/%.cc $(header) apt.h apt-extra/*.h
 	@mkdir -p $(dir $@)
 	@echo "[cycc] $<"
 	@$(apt64) $(plus) -c -o $@ $< -Dmain=main_$(basename $(notdir $@))
+
+Objects/%.o: %.cc $(header)
+	@mkdir -p $(dir $@)
+	@echo "[cycc] $<"
+	$(cycc) $(plus) -c -o $@ $< $(flag) -Wno-format -include apt.h -Dmain=main_$(basename $(notdir $@))
 
 Objects/%.o: %.c $(header)
 	@mkdir -p $(dir $@)
@@ -280,7 +280,7 @@ Objects/libapt64.a: $(libapt64)
 
 MobileCydia: $(object) entitlements.xml $(lapt)
 	@echo "[link] $@"
-	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(plus) $(libs) $(uikit) -Wl,-sdk_version,11.0
+	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,11.0
 	@mkdir -p bins
 	@cp -a $@ bins/$@-$(version)_$(shell date +%s)
 	@echo "[strp] $@"

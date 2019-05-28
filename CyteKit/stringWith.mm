@@ -36,7 +36,7 @@
 + (NSString *) stringWithFormat:(NSString *)format :(size_t)count :(id *)args {
     switch (count) {
         case 0:
-            return [[[NSString alloc] initWithFormat:format] autorelease];;
+            return [[[NSString alloc] initWithString:format] autorelease];;
         case 1:
             return [[[NSString alloc] initWithFormat:format, args[0]] autorelease];;
         case 2:

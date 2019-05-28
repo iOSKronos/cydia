@@ -66,6 +66,7 @@
 
 #undef ABS
 
+#include "apt.h"
 #include <apt-pkg/acquire.h>
 #include <apt-pkg/acquire-item.h>
 #include <apt-pkg/algorithms.h>
@@ -2589,12 +2590,14 @@ struct PackageNameOrdering :
             ignored_ = iterator->SelectedState == pkgCache::State::Hold;
         _end
 
+#ifndef __arm__
         _profile(Package$initWithVersion$Priority)
             // ignore "essential" tags from non-pinned repos
             if (essential_ && [database cache].Policy->GetPriority(version, true) == 500) {
                 essential_ = NO;
             }
         _end
+#endif
 
     _end } return self;
 }
@@ -2603,7 +2606,11 @@ struct PackageNameOrdering :
     pkgCache::VerIterator version;
 
     _profile(Package$packageWithIterator$GetCandidateVer)
+#ifndef __arm__
         version = [database cache]->GetCandidateVersion(iterator);
+#else
+        version = [database policy]->GetCandidateVer(iterator);
+#endif
     _end
 
     if (version.end())
@@ -3542,10 +3549,14 @@ class CydiaLogCleaner :
     if (static_cast<pkgDepCache *>(cache_) == NULL)
         return nil;
     pkgCache::PkgIterator iterator;
+#ifndef __arm__
     // try common arch first
     iterator = cache_->FindPkg([name UTF8String], common_arch);
     if (iterator.end())
         iterator = cache_->FindPkg([name UTF8String], "any");
+#else
+    iterator = cache_->FindPkg([name UTF8String]);
+#endif
     return iterator.end() ? nil : [[Package newPackageWithIterator:iterator withZone:NULL inPool:NULL database:self] autorelease];
 } }
 
@@ -4771,6 +4782,9 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
 
         pkgCacheFile &cache([database_ cache]);
         NSArray *packages([database_ packages]);
+#ifdef __arm__
+        pkgDepCache::Policy *policy([database_ policy]);
+#endif
 
         issues_ = [NSMutableArray arrayWithCapacity:4];
 
@@ -4885,7 +4899,11 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
                 [removes addObject:name];
             }
 
+#ifndef __arm__
             substrate_ |= DepSubstrate(cache->GetCandidateVersion(iterator));
+#else
+            substrate_ |= DepSubstrate(policy->GetCandidateVer(iterator));
+#endif
             substrate_ |= DepSubstrate(iterator.CurrentVer());
         }
 

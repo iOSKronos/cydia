@@ -266,7 +266,7 @@ int main(int argc, const char *argv[]) {
             "deb http://apt.modmyi.com/ stable main\n"
             "deb https://repo.chariz.io/ ./\n"
             "deb https://repo.dynastic.co/ ./\n"
-	, kCFCoreFoundationVersionNumber] writeToFile:@ CYDIA_LIST atomically:YES];
+	] writeToFile:@ CYDIA_LIST atomically:YES];
     } else {
         [[NSString stringWithFormat:@
             "deb http://apt.saurik.com/ ios/%.2f main\n"
