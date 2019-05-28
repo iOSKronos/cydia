@@ -2,14 +2,7 @@
 #define APT_H
 
 #include <unistd.h>
-
-template <typename Type_>
-Type_ *memrchr(Type_ *data, int value, int size) {
-    for (int i = 0; i != size; ++i)
-        if (data[size - i - 1] == value)
-            return data + size - i - 1;
-    return 0;
-}
+#define DPKG_DATADIR "/usr/share/dpkg"
 
 template <typename Type_>
 static Type_ *strchrnul(Type_ *s, int c) {

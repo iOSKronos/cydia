@@ -10,3 +10,6 @@
 [submodule "apt-legacy"]
 	path = apt32
 	url = git://git.saurik.com/apt-legacy.git
+[submodule "apt64"]
+	path = apt64
+	url = git://git.bingner.com/apt.git
