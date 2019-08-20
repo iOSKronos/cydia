@@ -1,1 +1,1 @@
-apt32/methods/gpgv.cc
+apt64/methods/gpgv.cc
