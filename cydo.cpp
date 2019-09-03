@@ -79,6 +79,14 @@ int main(int argc, char *argv[]) {
     auto request(launch_data_new_string(LAUNCH_KEY_GETJOBS));
     auto response(launch_msg(request));
     launch_data_free(request);
+    if ((response == NULL || launch_data_get_type(response) != LAUNCH_DATA_DICTIONARY ) && strcmp(argv[0], "/usr/libexec/cydia/cydo.dummy") != 0 ) {
+        fprintf(stderr, "Warning: couldn't communicate with launchd , maybe we're in an intentionally broken jailbreak? Try to work around it.\n");
+        system("cp /usr/libexec/cydia/cydo /usr/libexec/cydia/cydo.dummy");
+        chmod("/usr/libexec/cydia/cydo.dummy", 0755);
+        argv[0] = "/usr/libexec/cydia/cydo.dummy";
+        execv(argv[0], argv);
+        _assert(false);
+    }
 
     _assert(response != NULL);
     _assert(launch_data_get_type(response) == LAUNCH_DATA_DICTIONARY);
