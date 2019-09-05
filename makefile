@@ -206,6 +206,7 @@ clean:
 	rm -rf Objects/ Images/
 
 Objects/apt64/apt-pkg/tagfile.o: Objects/apt64/apt-pkg/tagfile-keys.h
+Objects/apt64/apt-pkg/tagfile-keys.o: Objects/apt64/apt-pkg/tagfile-keys.h
 Objects/apt64/apt-pkg/deb/deblistparser.o: Objects/apt64/apt-pkg/tagfile-keys.h
 
 Objects/apt64/apt-pkg/tagfile-keys%h apt64/apt-pkg/tagfile-keys%cc:
@@ -235,7 +236,7 @@ Objects/apt64/%.o: apt64/%.cc $(header) apt.h apt-extra/*.h
 Objects/%.o: %.cc $(header)
 	@mkdir -p $(dir $@)
 	@echo "[cycc] $<"
-	$(cycc) $(plus) -c -o $@ $< $(flag) -Wno-format -include apt.h -Dmain=main_$(basename $(notdir $@))
+	@$(cycc) $(plus) -c -o $@ $< $(flag) -Wno-format -include apt.h -Dmain=main_$(basename $(notdir $@))
 
 Objects/%.o: %.c $(header)
 	@mkdir -p $(dir $@)
