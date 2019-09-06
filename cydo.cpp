@@ -27,6 +27,8 @@
 #include <errno.h>
 #include <sysexits.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 
 #include <launch.h>
 
@@ -80,9 +82,36 @@ int main(int argc, char *argv[]) {
     auto response(launch_msg(request));
     launch_data_free(request);
     if ((response == NULL || launch_data_get_type(response) != LAUNCH_DATA_DICTIONARY ) && strcmp(argv[0], "/usr/libexec/cydia/cydo.dummy") != 0 ) {
+        BOOL ok=false;
+        struct stat st;
+        struct stat myst;
+        if (stat("/usr/libexec/cydia/cydo.dummy", &st) == 0 && stat(argv[0], &myst) == 0 && st.st_size == myst.st_size) {
+            int efd = open("/usr/libexec/cydia/cydo.dummy", O_RDONLY);
+            if (efd > 0) {
+                void *existing = mmap(NULL, st.st_size, PROT_READ, MAP_PRIVATE, efd, 0);
+                if (existing != MAP_FAILED) {
+                    int myself = open(argv[0], O_RDONLY);
+                    if (myself>0) {
+                        void *myselfmap = mmap(NULL, myst.st_size, PROT_READ, MAP_PRIVATE, myself, 0);
+                        if (myselfmap != MAP_FAILED) {
+                            if (memcmp(existing, myselfmap, st.st_size) == 0) {
+                                ok = true;
+                            }
+                            munmap(myselfmap, myst.st_size);
+                        }
+                        close(myself);
+                    }
+                    munmap(existing, st.st_size);
+                }
+                close(efd);
+            }
+        }
         fprintf(stderr, "Warning: couldn't communicate with launchd , maybe we're in an intentionally broken jailbreak? Try to work around it.\n");
-        system("cp /usr/libexec/cydia/cydo /usr/libexec/cydia/cydo.dummy");
-        chmod("/usr/libexec/cydia/cydo.dummy", 0755);
+        if (!ok) {
+            unlink("/usr/libexec/cydia/cydo.dummy");
+            system("cp /usr/libexec/cydia/cydo /usr/libexec/cydia/cydo.dummy");
+            chmod("/usr/libexec/cydia/cydo.dummy", 0755);
+        }
         argv[0] = "/usr/libexec/cydia/cydo.dummy";
         execv(argv[0], argv);
         _assert(false);
