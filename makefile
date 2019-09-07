@@ -35,7 +35,7 @@ endif
 cycc += -include system.h
 
 cycc += -fmessage-length=0
-cycc += -gfull -O2
+cycc += -O2
 cycc += -fvisibility=hidden
 
 link += -Wl,-dead_strip
@@ -166,6 +166,7 @@ apt32 += -Wno-tautological-compare
 apt32 += -Wno-uninitialized
 apt32 += -Wno-unused-private-field
 apt32 += -Wno-unused-variable
+apt32 += -DNDEBUG
 endif
 
 flag64 := 
@@ -177,6 +178,7 @@ apt64 += -include apt.h
 apt64 += -Wno-deprecated-register
 apt64 += -Wno-unused-private-field
 apt64 += -Wno-unused-variable
+apt64 += -DNDEBUG
 
 eapt := -include apt.h
 apt64 += $(eapt)
