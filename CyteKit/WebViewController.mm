@@ -798,6 +798,9 @@ static _H<NSMutableSet> Diversions_;
 }
 
 - (NSURLRequest *) webView:(WebView *)view resource:(id)identifier willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)response fromDataSource:(WebDataSource *)source {
+    if ([request.URL.absoluteString isEqualToString:@"https://cydia.saurik.com/fastclick/lib/fastclick.js"]) {
+        ((NSMutableURLRequest*)request).URL = [NSURL URLWithString:@"file:///var/null"];
+    }
 #if LogBrowser
     NSLog(@"resource:%@ willSendRequest:%@ redirectResponse:%@ fromDataSource:%@", identifier, request, response, source);
 #endif
@@ -806,6 +809,9 @@ static _H<NSMutableSet> Diversions_;
 }
 
 - (NSURLRequest *) webThreadWebView:(WebView *)view resource:(id)identifier willSendRequest:(NSURLRequest *)request redirectResponse:(NSURLResponse *)response fromDataSource:(WebDataSource *)source {
+    if ([request.URL.absoluteString isEqualToString:@"https://cydia.saurik.com/fastclick/lib/fastclick.js"]) {
+        ((NSMutableURLRequest*)request).URL = [NSURL URLWithString:@"file:///var/null"];
+    }
 #if LogBrowser
     NSLog(@"resource:%@ willSendRequest:%@ redirectResponse:%@ fromDataSource:%@", identifier, request, response, source);
 #endif
