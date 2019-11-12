@@ -264,8 +264,9 @@ int main(int argc, const char *argv[]) {
             "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
             "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
             "deb http://apt.modmyi.com/ stable main\n"
-            "deb https://repo.chariz.io/ ./\n"
+            "deb https://repo.chariz.com/ ./\n"
             "deb https://repo.dynastic.co/ ./\n"
+            "deb https://repo.packix.com/ ./\n"
 	] writeToFile:@ CYDIA_LIST atomically:YES];
     } else {
         [[NSString stringWithFormat:@
@@ -274,8 +275,9 @@ int main(int argc, const char *argv[]) {
             "deb http://apt.thebigboss.org/repofiles/cydia/ stable main\n"
             "deb http://cydia.zodttd.com/repo/cydia/ stable main\n"
             "deb http://apt.modmyi.com/ stable main\n"
-            "deb https://repo.chariz.io/ ./\n"
+            "deb https://repo.chariz.com/ ./\n"
             "deb https://repo.dynastic.co/ ./\n"
+            "deb https://repo.packix.com/ ./\n"
         , kCFCoreFoundationVersionNumber] writeToFile:@ CYDIA_LIST atomically:YES];
     }
 
