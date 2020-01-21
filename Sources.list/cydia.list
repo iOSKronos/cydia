@@ -4,4 +4,3 @@ deb http://cydia.zodttd.com/repo/cydia/ stable main
 deb http://apt.modmyi.com/ stable main
 deb https://repo.chariz.com/ ./
 deb https://repo.dynastic.co/ ./
-deb https://repo.packix.com/ ./
