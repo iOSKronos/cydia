@@ -8112,7 +8112,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     [alert setContext:@"source"];
 
     [alert setNumberOfRows:1];
-    [alert addTextFieldWithValue:@"http://" label:@""];
+    [alert addTextFieldWithValue:@"https://" label:@""];
 
     NSObject<UITextInputTraits> *traits = [[alert textField] textInputTraits];
     [traits setAutocapitalizationType:UITextAutocapitalizationTypeNone];
