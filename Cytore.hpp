@@ -140,6 +140,15 @@ class File {
             blocks_.push_back(bytes + Block_ * i);
     }
 
+    void Close_() {
+        for (typename MappingVector_::const_iterator map(maps_.begin()); map != maps_.end(); ++map)
+            munmap(map->data_, map->size_);
+        maps_.clear();
+        blocks_.clear();
+        close(file_);
+        file_ = -1;
+    }
+
     bool Truncate_(size_t capacity) {
         capacity = Round(capacity, Block_);
 
@@ -164,9 +173,7 @@ class File {
     }
 
     ~File() {
-        for (typename MappingVector_::const_iterator map(maps_.begin()); map != maps_.end(); ++map)
-            munmap(map->data_, map->size_);
-        close(file_);
+        Close_();
     }
 
     void Sync() {
@@ -182,6 +189,8 @@ class File {
         _assert(file_ == -1);
         file_ = open(path, O_RDWR | O_CREAT | O_EXLOCK, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         _assert(file_ != -1);
+        _assert(file_ != STDOUT_FILENO);
+        _assert(file_ != STDERR_FILENO);
 
         struct stat stat;
         _assert(fstat(file_, &stat) == 0);
@@ -197,16 +206,11 @@ class File {
 
             Header_().magic_ = Magic;
             Size_() = core;
-        } else if (size < core) {
-            close(file_);
-            file_ = -1;
-            unlink(path);
+        // XXX: this involves an unneccessary call to ftruncate()
+        } else if (size < core || !Truncate_(size) || Header_().magic_ != Magic || Header_().version_ != 0) {
+            Close_();
+            _assert(unlink(path) == 0);
             goto open;
-        } else {
-            // XXX: this involves an unneccessary call to ftruncate()
-            _assert(Truncate_(size));
-            _assert(Header_().magic_ == Magic);
-            _assert(Header_().version_ == 0);
         }
     }
 

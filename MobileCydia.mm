@@ -9352,9 +9352,19 @@ int main(int argc, char *argv[]) {
     if ([WebPreferences respondsToSelector:@selector(setWebKitLinkTimeVersion:)])
                 [WebPreferences setWebKitLinkTimeVersion:PACKED_VERSION(3453,0,0)];
 
+    // Ensure we have a stdout and stderr
     int fd(open("/tmp/cydia.log", O_WRONLY | O_APPEND | O_CREAT, 0644));
-    dup2(fd, 2);
-    close(fd);
+    // Added this because stderr output ended up in metadata.cb0 somehow once
+    // Perhaps we were spawned with stderr or stdout closed?
+    //
+    // Ensure we have a stdout and stderr
+    if (fcntl(STDOUT_FILENO, F_GETFD) == -1) {
+        dup2(fd, STDOUT_FILENO);
+    }
+    dup2(fd, STDERR_FILENO);
+    if (fd > STDERR_FILENO) {
+        close(fd);
+    }
 
     NSAutoreleasePool *pool([[NSAutoreleasePool alloc] init]);
 
