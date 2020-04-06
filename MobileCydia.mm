@@ -9489,13 +9489,6 @@ int main(int argc, char *argv[]) {
 
     _trace();
     mkdir("/var/mobile/Library/Cydia", 0755);
-    fd = open("/var/mobile/Library/Cydia/metadata.cb0", O_RDWR | O_CREAT | O_EXLOCK, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if (fd == -1) {
-        system("/usr/libexec/cydia/cydo /bin/rm -rf /var/mobile/Library/Cydia");
-        mkdir("/var/mobile/Library/Cydia", 0755);
-    } else {
-        close(fd);
-    }
     MetaFile_.Open("/var/mobile/Library/Cydia/metadata.cb0");
     _trace();
 
