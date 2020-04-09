@@ -2112,7 +2112,6 @@ uint32_t PackageChangesRadix(Package *self, void *) {
     } value;
 
     bool upgradable([self upgradableAndEssential:YES]);
-    value.bits.upgradable = upgradable ? 1 : 0;
 
     if (upgradable) {
         value.bits.timestamp = 0;
@@ -2817,7 +2816,7 @@ struct PackageNameOrdering :
                 return false;
             }
         } else {
-            return [database_ cache][iterator_].Upgradable();
+            return (version_ != current && [database_ cache][iterator_].Status != 0);
         }
     _end
 }
@@ -2909,7 +2908,7 @@ struct PackageNameOrdering :
                 return @"REINSTALL";
             else*/ switch (state.Status) {
                 case -1:
-                    return @"DOWNGRADE";
+                    return [database_ cache].Policy->GetCandidateVer(iterator_)==state.CandidateVerIter([database_ cache])?@"UPGRADE":@"DOWNGRADE";
                 case 0:
                     return @"INSTALL";
                 case 1:
@@ -4117,7 +4116,7 @@ class CydiaLogCleaner :
             [after addObject:[NSString stringWithUTF8String:(*source)->GetURI().c_str()]];
     }
 
-    if (![before isEqualToArray:after])
+    if (![before isEqualToArray:after] && Finish_ == 0)
         [self update];
 }
 
@@ -4867,7 +4866,7 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
             else if (!state.Delete() && (state.iFlags & pkgDepCache::ReInstall) == pkgDepCache::ReInstall)
                 [reinstalls addObject:name];
             // XXX: move before previous if
-            else if (state.Upgrade())
+            else if (state.Upgrade() || (state.Downgrade() && state.CandidateVerIter(cache) == cache.Policy->GetCandidateVer(iterator)))
                 [upgrades addObject:name];
             else if (state.Downgrade())
                 [downgrades addObject:name];
@@ -6870,7 +6869,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 
 /* Changes Controller {{{ */
 @interface ChangesController : FilteredPackageListController {
-    unsigned upgrades_;
 }
 
 - (id) initWithDatabase:(Database *)database;
@@ -6986,7 +6984,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     Section *section = nil;
     time_t last = 0;
 
-    upgrades_ = 0;
+    size_t upgrades_ = 0;
     bool unseens = false;
 
     CFDateFormatterRef formatter(CFDateFormatterCreate(NULL, Locale_, kCFDateFormatterMediumStyle, kCFDateFormatterMediumStyle));
@@ -7042,7 +7040,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         [sections insertObject:upgradable atIndex:0];
 
     [[self navigationItem] setRightBarButtonItem:(upgrades_ == 0 ? nil : [[[UIBarButtonItem alloc]
-        initWithTitle:[NSString stringWithFormat:UCLocalize("PARENTHETICAL"), UCLocalize("UPGRADE"), [NSString stringWithFormat:@"%u", upgrades_]]
+        initWithTitle:[NSString stringWithFormat:UCLocalize("PARENTHETICAL"), UCLocalize("UPGRADE"), [NSString stringWithFormat:@"%zu", upgrades_]]
         style:UIBarButtonItemStylePlain
         target:self
         action:@selector(upgradeButtonClicked)
@@ -8655,7 +8653,15 @@ _end
 
 - (void) perform_ {
     [database_ perform];
-    [self performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    if (Finish_ == 0) {
+        [self performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
+    } else {
+        // Reload data when we open up again
+        if (NSMutableDictionary *cache = [NSMutableDictionary dictionaryWithContentsOfFile:CacheState_]) {
+            [cache removeObjectForKey:@"LastUpdate"];
+            [cache writeToFile:CacheState_ atomically:YES];
+        }
+    }
     if (UICache_) {
         UICache_ = false;
         [self performSelectorOnMainThread:@selector(uicache) withObject:nil waitUntilDone:YES];
@@ -9312,7 +9318,11 @@ int main_file();
 int main_gpgv();
 int main_rred(int, char *argv[]);
 
+#ifndef __arm__
+#define main_gzip main_store
+#else
 int main_gzip(int, char *argv[]);
+#endif
 
 int main_store(int, char *argv[]);
 
