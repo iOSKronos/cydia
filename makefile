@@ -107,7 +107,6 @@ code := $(foreach dir,$(dirs),$(wildcard $(foreach ext,h hpp c cpp m mm,$(dir)/*
 code := $(filter-out SDURLCache/SDURLCacheTests.m,$(code))
 code += MobileCydia.mm Version.mm iPhonePrivate.h Cytore.hpp lookup3.c Sources.h Sources.mm DiskUsage.cpp
 
-code += gpgv.cc
 code += http.cc
 
 source := $(filter %.m,$(code)) $(filter %.mm,$(code))
@@ -122,7 +121,7 @@ object := $(object:.m=.o)
 object := $(object:.mm=.o)
 object := $(object:%=Objects/%)
 
-methods := copy file rred
+methods := copy file rred gpgv
 
 libapt32 := 
 libapt32 += $(wildcard apt32/apt-pkg/*.cc)
@@ -334,7 +333,7 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	rm -rf _/Applications/Cydia.app/*.lproj
 	cp -a MobileCydia _/Applications/Cydia.app/Cydia
 	
-	for meth in bzip2 gzip lzma gpgv http https store $(methods); do ln -s Cydia _/Applications/Cydia.app/"$${meth}"; done
+	for meth in bzip2 gzip lzma http https store $(methods); do ln -s Cydia _/Applications/Cydia.app/"$${meth}"; done
 	
 	cd MobileCydia.app && find . -name '*.png' -exec cp -af ../Images/MobileCydia.app/{} ../_/Applications/Cydia.app/{} ';'
 	@echo "[sign] Cydia.app"
