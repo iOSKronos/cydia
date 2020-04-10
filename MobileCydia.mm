@@ -8653,7 +8653,7 @@ _end
 
 - (void) perform_ {
     [database_ perform];
-    if (Finish_ == 0) {
+    if (Finish_ == 0 && !RestartSubstrate_) {
         [self performSelectorOnMainThread:@selector(reloadData) withObject:nil waitUntilDone:YES];
     } else {
         // Reload data when we open up again
