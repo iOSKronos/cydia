@@ -35,7 +35,7 @@ endif
 cycc += -include system.h
 
 cycc += -fmessage-length=0
-cycc += -O2
+cycc += -gfull -O2
 cycc += -fvisibility=hidden
 
 link += -Wl,-dead_strip
