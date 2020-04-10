@@ -1447,7 +1447,7 @@ static void SaveConfig(NSObject *lock) {
     _transient NSObject<SourceDelegate> *delegate_;
 }
 
-- (Source *) initWithMetaIndex:(metaIndex *)index forDatabase:(Database *)database inPool:(CYPool *)pool;
+- (Source *) initWithMetaIndex:(metaIndex *)index forDatabase:(Database *)database inPool:(CYPool *)pool withAcquire:(pkgAcquire *)acquire;
 
 - (NSComparisonResult) compareByName:(Source *)source;
 
@@ -1530,7 +1530,7 @@ static void SaveConfig(NSObject *lock) {
     return index_;
 }
 
-- (void) setMetaIndex:(metaIndex *)index inPool:(CYPool *)pool {
+- (void) setMetaIndex:(metaIndex *)index inPool:(CYPool *)pool withAcquire:(pkgAcquire *)acquire {
     trusted_ = index->IsTrusted();
 
     uri_.set(pool, index->GetURI());
@@ -1542,12 +1542,11 @@ static void SaveConfig(NSObject *lock) {
         std::string file(dindex->MetaIndexURI(""));
         base_.set(pool, file);
 
-        pkgAcquire acquire;
         _profile(Source$setMetaIndex$GetIndexes)
-        dindex->GetIndexes(&acquire, true);
+        dindex->GetIndexes(acquire, true);
         _end
         _profile(Source$setMetaIndex$DescURI)
-        for (pkgAcquire::ItemIterator item(acquire.ItemsBegin()); item != acquire.ItemsEnd(); item++) {
+        for (pkgAcquire::ItemIterator item(acquire->ItemsBegin()); item != acquire->ItemsEnd(); item++) {
             std::string file((*item)->DescURI());
             auto slash(file.rfind('/'));
             if (slash == std::string::npos)
@@ -1603,14 +1602,14 @@ static void SaveConfig(NSObject *lock) {
         authority_ = [url path];
 }
 
-- (Source *) initWithMetaIndex:(metaIndex *)index forDatabase:(Database *)database inPool:(CYPool *)pool {
+- (Source *) initWithMetaIndex:(metaIndex *)index forDatabase:(Database *)database inPool:(CYPool *)pool withAcquire:(pkgAcquire *)acquire {
     if ((self = [super init]) != nil) {
         era_ = [database era];
         database_ = database;
         index_ = index;
 
         _profile(Source$initWithMetaIndex$setMetaIndex)
-        [self setMetaIndex:index inPool:pool];
+        [self setMetaIndex:index inPool:pool withAcquire:acquire];
         _end
     } return self;
 }
@@ -3756,9 +3755,11 @@ class CydiaLogCleaner :
         return;
     _end
 
+    fetcher_ = new pkgAcquire(&status_);
+
     _profile(reloadDataWithInvocation$Source$initWithMetaIndex)
     for (pkgSourceList::const_iterator source = list_->begin(); source != list_->end(); ++source) {
-        Source *object([[[Source alloc] initWithMetaIndex:*source forDatabase:self inPool:&pool_] autorelease]);
+        Source *object([[[Source alloc] initWithMetaIndex:*source forDatabase:self inPool:&pool_ withAcquire:fetcher_] autorelease]);
         [sourceList_ addObject:object];
     }
     _end
@@ -3811,7 +3812,6 @@ class CydiaLogCleaner :
     policy_ = new pkgDepCache::Policy();
     records_ = new pkgRecords(cache_);
     resolver_ = new pkgProblemResolver(cache_);
-    fetcher_ = new pkgAcquire(&status_);
     lock_ = NULL;
 
     if (cache_->DelCount() != 0 || cache_->InstCount() != 0) {
