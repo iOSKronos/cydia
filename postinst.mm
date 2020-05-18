@@ -76,7 +76,7 @@ int main(int argc, const char *argv[]) {
         system("rm -rf " OldCache_);
 
     #define NewCache_ "/var/mobile/Library/Caches/com.saurik.Cydia"
-    system("cd /; su -c 'mkdir -p " NewCache_ "' mobile");
+    system("cd /; su mobile -c 'mkdir -p " NewCache_ "'");
     if (access(NewCache_ "/lists", F_OK) != 0 && errno == ENOENT)
         system("cp -at " NewCache_ " /var/lib/apt/lists");
     system("chown -R 501.501 " NewCache_);
@@ -84,7 +84,7 @@ int main(int argc, const char *argv[]) {
     #define OldLibrary_ "/var/lib/cydia"
 
     #define NewLibrary_ "/var/mobile/Library/Cydia"
-    system("cd /; su -c 'mkdir -p " NewLibrary_ "' mobile");
+    system("cd /; su mobile -c 'mkdir -p " NewLibrary_ "'");
 
     #define Cytore_ "/metadata.cb0"
 
