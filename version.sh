@@ -6,7 +6,7 @@ else
     flags=("$@")
 fi
 
-version=$(git describe --tags --match="v*" "${flags[@]}" | sed -e 's@-\([^-]*\)-\([^-]*\)$@+\1.\2@;s@^v@@;s@%@~@g')
+version=1.1.33
 
 if grep '#define ForRelease 0' MobileCydia.mm &>/dev/null; then
     version=${version}~srk
