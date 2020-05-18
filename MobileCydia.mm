@@ -7659,6 +7659,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     NSURLConnection *trivial_bz2_;
     NSURLConnection *trivial_gz_;
     NSURLConnection *trivial_xz_;
+    NSURLConnection *trivial_zstd_;
 
     BOOL cydia_;
 }
@@ -7682,6 +7683,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     [self _releaseConnection:trivial_gz_];
     [self _releaseConnection:trivial_bz2_];
     [self _releaseConnection:trivial_xz_];
+    [self _releaseConnection:trivial_zstd_];
 
     [super dealloc];
 }
@@ -7809,6 +7811,9 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         field = &trivial_gz_;
     else if (connection == trivial_xz_)
         field = &trivial_xz_;
+    else if (connection == trivial_zstd_)
+        field = &trivial_zstd_;
+    field = &trivial_zstd_;
     _assert(field != NULL);
     [connection release];
     *field = nil;
@@ -7816,7 +7821,8 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     if (
         trivial_bz2_ == nil &&
         trivial_gz_ == nil &&
-        trivial_xz_ == nil
+        trivial_xz_ == nil &&
+        trivial_zstd_ == nil
     ) {
         NSString *warning(cydia_ ? [self yieldToSelector:@selector(getWarning)] : nil);
 
@@ -7936,6 +7942,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
                 trivial_bz2_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.bz2"] method:@"HEAD"] retain];
                 trivial_gz_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.gz"] method:@"HEAD"] retain];
                 trivial_xz_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.xz"] method:@"HEAD"] retain];
+                trivial_zstd_ = [[self _requestHRef:[href_ stringByAppendingString:@"Packages.zst"] method:@"HEAD"] retain];
 
                 cydia_ = false;
 
