@@ -20,11 +20,11 @@ endif
 
 ifeq ($(shell uname -s),Linux)
 gxx := aarch64-apple-darwin-clang++
-sdk := ~/cctools/SDK/iPhoneOS.sdk
-mac := ~/cctools/SDK/MacOSX.sdk
+sdk := $(HOME)/cctools/SDK/iPhoneOS.sdk
+mac := $(HOME)/cctools/SDK/MacOSX.sdk
 else ifeq ($(shell uname -s),Darwin)
 gxx := $(shell xcrun --sdk $(kind) -f g++)
-sdk := $(shell xcodebuild -sdk $(kind) -version Path)
+sdk := $(HOME)/theos/SDKs/iPhoneOS11.2.sdk
 mac := $(shell xcodebuild -sdk macosx -version Path)
 else
 $(error Use mac or linux)
@@ -290,7 +290,7 @@ Objects/libapt64.a: $(libapt64)
 
 MobileCydia: $(object) entitlements.xml $(lapt)
 	@echo "[link] $@"
-	@$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,11.0
+	$(cycc) -o $@ $(filter %.o,$^) $(link) $(libs) $(uikit) -Wl,-sdk_version,11.0
 	@mkdir -p bins
 	@cp -a $@ bins/$@-$(version)_$(shell date +%s)
 	@echo "[strp] $@"

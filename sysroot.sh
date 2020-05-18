@@ -20,9 +20,11 @@ for command in unlzma wget; do
     fi
 done
 
+if ! gtar --help | grep GNU &>/dev/null; then
 if tar --help | grep bsdtar &>/dev/null; then
     echo "Running \`tar\` is bsdtar :(. Please read compiling.txt." 1>&2
     exit 1
+fi
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
