@@ -3669,7 +3669,8 @@ class CydiaLogCleaner :
         lprintf("%c:[%s]\n", warning ? 'W' : 'E', error.c_str());
 
         static RegEx no_pubkey("GPG error:.* NO_PUBKEY .*");
-        if (warning && no_pubkey(error.c_str()))
+        static RegEx dup_source("Target.* multiple times .*");
+        if (warning && (no_pubkey(error.c_str()) || dup_source(error.c_str())))
             continue;
 
         [delegate_ addProgressEventOnMainThread:[CydiaProgressEvent eventWithMessage:[NSString stringWithUTF8String:error.c_str()] ofType:(warning ? kCydiaProgressEventTypeWarning : kCydiaProgressEventTypeError)] forTask:title];
