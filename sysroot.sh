@@ -2,8 +2,8 @@
 
 set -e
 
-if [[ ${BASH_VERSION} != 4* ]]; then
-    echo "bash 4.0 required" 1>&2
+if [[ ${BASH_VERSION} != 5* ]]; then
+    echo "bash 5.0 required" 1>&2
     exit 1
 fi
 
@@ -25,7 +25,11 @@ if tar --help | grep bsdtar &>/dev/null; then
     exit 1
 fi
 
-xcode=$(xcodebuild -sdk macosx -version Path)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+	xcode=~/cctools/SDK/MacOSX.sdk
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	xcode=$(xcodebuild -sdk macosx -version Path)
+fi
 
 rm -rf sysroot
 mkdir sysroot
@@ -108,4 +112,4 @@ wget --no-check-certificate -O CoreFoundation/CFUniChar.h "https://opensource.ap
 mkdir -p WebCore
 wget --no-check-certificate -O WebCore/WebCoreThread.h "https://opensource.apple.com/source/WebCore/WebCore-658.28/wak/WebCoreThread.h"
 
-ln -s "$(xcodebuild -sdk macosx -version Path)"/System/Library/Frameworks/IOKit.framework/Headers IOKit
+ln -s "${xcode}"/System/Library/Frameworks/IOKit.framework/Headers IOKit

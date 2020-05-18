@@ -1,7 +1,7 @@
 .DELETE_ON_ERROR:
 .SECONDARY:
 
-dpkg := fakeroot dpkg-deb -Zlzma
+dpkg := fakeroot dpkg-deb
 version := $(shell ./version.sh)
 
 flag := 
@@ -18,11 +18,19 @@ kind := iphoneos
 arch := arm64
 endif
 
+ifeq ($(shell uname -s),Linux)
+gxx := aarch64-apple-darwin-clang++
+sdk := ~/cctools/SDK/iPhoneOS.sdk
+mac := ~/cctools/SDK/MacOSX.sdk
+else ifeq ($(shell uname -s),Darwin)
 gxx := $(shell xcrun --sdk $(kind) -f g++)
-cycc := $(gxx)
-
 sdk := $(shell xcodebuild -sdk $(kind) -version Path)
 mac := $(shell xcodebuild -sdk macosx -version Path)
+else
+$(error Use mac or linux)
+endif
+
+cycc := $(gxx)
 
 cycc += -isysroot $(sdk)
 cycc += -idirafter $(mac)/usr/include
@@ -309,50 +317,50 @@ postinst: postinst.mm CyteKit/stringWith.mm CyteKit/stringWith.h CyteKit/UCPlatf
 debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion setnsfpn cydo $(images) $(shell find MobileCydia.app) cydia.control cydia.preferences Library/firmware.sh Library/move.sh Library/startup
 	fakeroot rm -rf _
 	mkdir -p _/var/lib/cydia
-	
+
 	mkdir -p _/etc/apt
 	mkdir _/etc/apt/apt.conf.d
 	mkdir _/etc/apt/preferences.d
 	cp -a cydia.preferences _/etc/apt/preferences.d/cydia
 	cp -a Trusted.gpg _/etc/apt/trusted.gpg.d
 	cp -a Sources.list _/etc/apt/sources.list.d
-	
+
 	mkdir -p _/usr/libexec
 	cp -a Library _/usr/libexec/cydia
 	cp -a sysroot/usr/bin/du _/usr/libexec/cydia
 	cp -a cfversion _/usr/libexec/cydia
 	cp -a setnsfpn _/usr/libexec/cydia
-	
+
 	cp -a cydo _/usr/libexec/cydia
-	
+
 	mkdir -p _/Library
 	cp -a LaunchDaemons _/Library/LaunchDaemons
-	
+
 	mkdir -p _/Applications
 	cp -a MobileCydia.app _/Applications/Cydia.app
 	rm -rf _/Applications/Cydia.app/*.lproj
 	cp -a MobileCydia _/Applications/Cydia.app/Cydia
-	
+
 	for meth in bzip2 gzip lzma http https store $(methods); do ln -s Cydia _/Applications/Cydia.app/"$${meth}"; done
-	
+
 	cd MobileCydia.app && find . -name '*.png' -exec cp -af ../Images/MobileCydia.app/{} ../_/Applications/Cydia.app/{} ';'
 	@echo "[sign] Cydia.app"
 	@ldid -T0 -Sentitlements.xml _/Applications/Cydia.app
-	
+
 	mkdir -p _/Applications/Cydia.app/Sources
 	ln -s /usr/share/bigboss/icons/bigboss.png _/Applications/Cydia.app/Sources/apt.bigboss.us.com.png
 	ln -s /usr/share/bigboss/icons/planetiphones.png _/Applications/Cydia.app/Sections/"Planet-iPhones Mods.png"
-	
+
 	mkdir -p _/DEBIAN
 	./control.sh cydia.control _ >_/DEBIAN/control
 	cp -a preinst postinst triggers _/DEBIAN/
-	
+
 	find _ -exec touch -t "$$(date -j -f "%s" +"%Y%m%d%H%M.%S" "$$(git show --format='format:%ct' | head -n 1)")" {} ';'
-	
+
 	fakeroot chown -R 0 _
 	fakeroot chgrp -R 0 _
 	fakeroot chmod 6755 _/usr/libexec/cydia/cydo
-	
+
 	mkdir -p debs
 	ln -sf debs/cydia_$(version)_iphoneos-arm.deb Cydia.deb
 	$(dpkg) -b _ Cydia.deb
@@ -361,20 +369,20 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 $(lproj_deb): $(shell find MobileCydia.app -name '*.strings') cydia-lproj.control
 	fakeroot rm -rf __
 	mkdir -p __/Applications/Cydia.app
-	
+
 	cp -a MobileCydia.app/*.lproj __/Applications/Cydia.app
-	
+
 	mkdir -p __/DEBIAN
 	./control.sh cydia-lproj.control __ >__/DEBIAN/control
-	
+
 	fakeroot chown -R 0 __
 	fakeroot chgrp -R 0 __
-	
+
 	mkdir -p debs
 	ln -sf debs/cydia-lproj_$(version)_iphoneos-arm.deb Cydia_.deb
 	$(dpkg) -b __ Cydia_.deb
 	@echo "$$(stat -L -f "%z" Cydia_.deb) $$(stat -f "%Y" Cydia_.deb)"
-	
+
 package: debs/cydia_$(version)_iphoneos-arm.deb $(lproj_deb)
 
 .PHONY: all clean package
