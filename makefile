@@ -178,7 +178,7 @@ endif
 
 flag64 := 
 flag64 += -arch $(arch)
-flag64 += -Xarch_$(arch) -m$(kind)-version-min=7.0
+flag64 += -Xarch_$(arch) -m$(kind)-version-min=12.0
 
 apt64 := $(cycc) $(flag64) $(flag)
 apt64 += -include apt.h
