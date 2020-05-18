@@ -7813,7 +7813,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         field = &trivial_xz_;
     else if (connection == trivial_zstd_)
         field = &trivial_zstd_;
-    field = &trivial_zstd_;
     _assert(field != NULL);
     [connection release];
     *field = nil;
