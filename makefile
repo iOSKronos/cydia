@@ -206,12 +206,10 @@ plus += -std=c++11
 images := $(shell find MobileCydia.app/ -type f -name '*.png')
 images := $(images:%=Images/%)
 
-lproj_deb := debs/cydia-lproj_$(version)_iphoneos-arm.deb
-
 all: MobileCydia
 
 clean:
-	rm -f MobileCydia postinst cydo setnsfpn cfversion
+	rm -f MobileCydia postinst cydo
 	rm -rf Objects/ Images/
 
 Objects/apt64/apt-pkg/tagfile.o: Objects/apt64/apt-pkg/tagfile-keys.h
@@ -298,14 +296,6 @@ MobileCydia: $(object) entitlements.xml $(lapt)
 	@echo "[uikt] $@"
 	@./uikit.sh $@
 
-cfversion: cfversion.mm
-	$(cycc) -o $@ $(filter %.mm,$^) $(flag) $(link) -framework CoreFoundation
-	@ldid -T0 -Sgenent.xml $@
-
-setnsfpn: setnsfpn.cpp
-	$(cycc) -o $@ $(filter %.cpp,$^) $(flag) $(link)
-	@ldid -T0 -Sgenent.xml $@
-
 cydo: cydo.cpp
 	$(cycc) $(plus) -o $@ $(filter %.cpp,$^) $(flag) $(link) -Wno-deprecated-writable-strings
 	@ldid -T0 -Sgenent.xml $@
@@ -314,22 +304,17 @@ postinst: postinst.mm CyteKit/stringWith.mm CyteKit/stringWith.h CyteKit/UCPlatf
 	$(cycc) $(plus) -o $@ $(filter %.mm,$^) $(flag) $(link) -framework CoreFoundation -framework Foundation -framework UIKit
 	@ldid -T0 -Sgenent.xml $@
 
-debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion setnsfpn cydo $(images) $(shell find MobileCydia.app) cydia.control cydia.preferences Library/firmware.sh Library/move.sh Library/startup
+debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cydo $(images) $(shell find MobileCydia.app) cydia.control Library/startup $(shell find MobileCydia.app -name '*.strings')
 	fakeroot rm -rf _
 	mkdir -p _/var/lib/cydia
 
 	mkdir -p _/etc/apt
 	mkdir _/etc/apt/apt.conf.d
-	mkdir _/etc/apt/preferences.d
-	cp -a cydia.preferences _/etc/apt/preferences.d/cydia
-	cp -a Trusted.gpg _/etc/apt/trusted.gpg.d
 	cp -a Sources.list _/etc/apt/sources.list.d
 
 	mkdir -p _/usr/libexec
 	cp -a Library _/usr/libexec/cydia
 	cp -a sysroot/usr/bin/du _/usr/libexec/cydia
-	cp -a cfversion _/usr/libexec/cydia
-	cp -a setnsfpn _/usr/libexec/cydia
 
 	cp -a cydo _/usr/libexec/cydia
 
@@ -338,7 +323,6 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 
 	mkdir -p _/Applications
 	cp -a MobileCydia.app _/Applications/Cydia.app
-	rm -rf _/Applications/Cydia.app/*.lproj
 	cp -a MobileCydia _/Applications/Cydia.app/Cydia
 
 	for meth in bzip2 gzip lzma http https store $(methods); do ln -s Cydia _/Applications/Cydia.app/"$${meth}"; done
@@ -346,10 +330,6 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	cd MobileCydia.app && find . -name '*.png' -exec cp -af ../Images/MobileCydia.app/{} ../_/Applications/Cydia.app/{} ';'
 	@echo "[sign] Cydia.app"
 	@ldid -T0 -Sentitlements.xml _/Applications/Cydia.app
-
-	mkdir -p _/Applications/Cydia.app/Sources
-	ln -s /usr/share/bigboss/icons/bigboss.png _/Applications/Cydia.app/Sources/apt.bigboss.us.com.png
-	ln -s /usr/share/bigboss/icons/planetiphones.png _/Applications/Cydia.app/Sections/"Planet-iPhones Mods.png"
 
 	mkdir -p _/DEBIAN
 	./control.sh cydia.control _ >_/DEBIAN/control
@@ -366,23 +346,6 @@ debs/cydia_$(version)_iphoneos-arm.deb: MobileCydia preinst postinst cfversion s
 	$(dpkg) -b _ Cydia.deb
 	@echo "$$(stat -L -f "%z" Cydia.deb) $$(stat -f "%Y" Cydia.deb)"
 
-$(lproj_deb): $(shell find MobileCydia.app -name '*.strings') cydia-lproj.control
-	fakeroot rm -rf __
-	mkdir -p __/Applications/Cydia.app
-
-	cp -a MobileCydia.app/*.lproj __/Applications/Cydia.app
-
-	mkdir -p __/DEBIAN
-	./control.sh cydia-lproj.control __ >__/DEBIAN/control
-
-	fakeroot chown -R 0 __
-	fakeroot chgrp -R 0 __
-
-	mkdir -p debs
-	ln -sf debs/cydia-lproj_$(version)_iphoneos-arm.deb Cydia_.deb
-	$(dpkg) -b __ Cydia_.deb
-	@echo "$$(stat -L -f "%z" Cydia_.deb) $$(stat -f "%Y" Cydia_.deb)"
-
-package: debs/cydia_$(version)_iphoneos-arm.deb $(lproj_deb)
+package: debs/cydia_$(version)_iphoneos-arm.deb
 
 .PHONY: all clean package

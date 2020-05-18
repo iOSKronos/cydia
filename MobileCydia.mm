@@ -241,10 +241,7 @@ static NSData *(*$SBSCopyIconImagePNGDataForDisplayIdentifier)(NSString *);
 static CFStringRef (*$MGCopyAnswer)(CFStringRef);
 
 static NSString *UniqueIdentifier(UIDevice *device = nil) {
-    if (kCFCoreFoundationVersionNumber < 800) // iOS 7.x
-        return [device ?: [UIDevice currentDevice] uniqueIdentifier];
-    else
-        return [(id)$MGCopyAnswer(CFSTR("UniqueDeviceID")) autorelease];
+    return [(id)$MGCopyAnswer(CFSTR("UniqueDeviceID")) autorelease];
 }
 
 static const NSUInteger UIViewAutoresizingFlexibleBoth(UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
@@ -3050,8 +3047,6 @@ struct PackageNameOrdering :
         bool cydia = false;
         bool user = false;
         bool _private = false;
-        bool stash = false;
-        bool dbstash = false;
         bool dsstore = false;
 
         bool repository = [[self section] isEqualToString:@"Repositories"];
@@ -3064,10 +3059,6 @@ struct PackageNameOrdering :
                     user = true;
                 else if (!_private && [file isEqualToString:@"/private"])
                     _private = true;
-                else if (!stash && [file isEqualToString:@"/var/stash"])
-                    stash = true;
-                else if (!dbstash && [file isEqualToString:@"/var/db/stash"])
-                    dbstash = true;
                 else if (!dsstore && [file hasSuffix:@"/.DS_Store"])
                     dsstore = true;
 
@@ -3078,10 +3069,6 @@ struct PackageNameOrdering :
             [warnings addObject:[NSString stringWithFormat:UCLocalize("FILES_INSTALLED_TO"), @"/User"]];
         if (_private)
             [warnings addObject:[NSString stringWithFormat:UCLocalize("FILES_INSTALLED_TO"), @"/private"]];
-        if (stash)
-            [warnings addObject:[NSString stringWithFormat:UCLocalize("FILES_INSTALLED_TO"), @"/var/stash"]];
-        if (dbstash)
-            [warnings addObject:[NSString stringWithFormat:UCLocalize("FILES_INSTALLED_TO"), @"/var/db/stash"]];
         if (dsstore)
             [warnings addObject:[NSString stringWithFormat:UCLocalize("FILES_INSTALLED_TO"), @".DS_Store"]];
     }
@@ -5535,9 +5522,6 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
         [badge_ drawInRect:Retina(rect)];
     }
 
-    if (highlighted && kCFCoreFoundationVersionNumber < 800)
-        UISetColor(White_);
-
     if (!highlighted)
         UISetColor(commercial_ ? Purple_ : Black_);
     [name_ drawAtPoint:CGPointMake(36, 8) forWidth:(width - (placard_ == nil ? 68 : 94)) withFont:Font18Bold_ lineBreakMode:NSLineBreakByTruncatingTail];
@@ -5577,9 +5561,6 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
 
         [badge_ drawInRect:Retina(rect)];
     }
-
-    if (highlighted && kCFCoreFoundationVersionNumber < 800)
-        UISetColor(White_);
 
     if (!highlighted)
         UISetColor(commercial_ ? Purple_ : Black_);
@@ -5692,9 +5673,6 @@ bool DepSubstrate(const pkgCache::VerIterator &iterator) {
     bool highlighted(self.highlighted && !editing_);
 
     [icon_ drawInRect:CGRectMake(7, 7, 32, 32)];
-
-    if (highlighted && kCFCoreFoundationVersionNumber < 800)
-        UISetColor(White_);
 
     float width(rect.size.width);
     if (editing_)
@@ -6369,6 +6347,8 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         "Sam Bingner (sbingner)\n"
         "sam@bingner.com\n"
         "http://www.bingner.com/"
+        "Modified modified work Copyright \u00a9 2020\n"
+        "Kronos"
     ];
 
     [alert show];
@@ -6413,7 +6393,7 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
         [self setDelegate:self];
 
         indicator_ = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteTiny] autorelease];
-        [indicator_ setOrigin:CGPointMake(kCFCoreFoundationVersionNumber >= 800 ? 2 : 4, 2)];
+        [indicator_ setOrigin:CGPointMake(2,2)];
 
         [[self view] setAutoresizingMask:UIViewAutoresizingFlexibleBoth];
     } return self;
@@ -7616,9 +7596,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     CGRect frame([indicator_ frame]);
     frame.origin.x = bounds.size.width - frame.size.width;
     frame.origin.y = Retina((bounds.size.height - frame.size.height) / 2);
-
-    if (kCFCoreFoundationVersionNumber < 800)
-        frame.origin.x -= 8;
     [indicator_ setFrame:frame];
 }
 
@@ -7644,9 +7621,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 
         [icon_ drawInRect:Retina(rect)];
     }
-
-    if (highlighted && kCFCoreFoundationVersionNumber < 800)
-        UISetColor(White_);
 
     if (!highlighted)
         UISetColor(Black_);
@@ -8141,75 +8115,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 @end
 /* }}} */
 
-/* Stash Controller {{{ */
-@interface StashController : CyteViewController {
-    _H<UIActivityIndicatorView> spinner_;
-    _H<UILabel> status_;
-    _H<UILabel> caption_;
-}
-
-@end
-
-@implementation StashController
-
-- (void) loadView {
-    UIView *view([[[UIView alloc] initWithFrame:[[UIScreen mainScreen] applicationFrame]] autorelease]);
-    [view setAutoresizingMask:(UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight)];
-    [self setView:view];
-
-    [view setBackgroundColor:[UIColor viewFlipsideBackgroundColor]];
-
-    spinner_ = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge] autorelease];
-    CGRect spinrect = [spinner_ frame];
-    spinrect.origin.x = Retina([[self view] frame].size.width / 2 - spinrect.size.width / 2);
-    spinrect.origin.y = [[self view] frame].size.height - 80.0f;
-    [spinner_ setFrame:spinrect];
-    [spinner_ setAutoresizingMask:UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin];
-    [view addSubview:spinner_];
-    [spinner_ startAnimating];
-
-    CGRect captrect;
-    captrect.size.width = [[self view] frame].size.width;
-    captrect.size.height = 40.0f;
-    captrect.origin.x = 0;
-    captrect.origin.y = Retina([[self view] frame].size.height / 2 - captrect.size.height * 2);
-    caption_ = [[[UILabel alloc] initWithFrame:captrect] autorelease];
-    [caption_ setText:UCLocalize("PREPARING_FILESYSTEM")];
-    [caption_ setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin];
-    [caption_ setFont:[UIFont boldSystemFontOfSize:28.0f]];
-    [caption_ setTextColor:[UIColor whiteColor]];
-    [caption_ setBackgroundColor:[UIColor clearColor]];
-    [caption_ setShadowColor:[UIColor blackColor]];
-    [caption_ setTextAlignment:NSTextAlignmentCenter];
-    [view addSubview:caption_];
-
-    CGRect statusrect;
-    statusrect.size.width = [[self view] frame].size.width;
-    statusrect.size.height = 30.0f;
-    statusrect.origin.x = 0;
-    statusrect.origin.y = Retina([[self view] frame].size.height / 2 - statusrect.size.height);
-    status_ = [[[UILabel alloc] initWithFrame:statusrect] autorelease];
-    [status_ setAutoresizingMask:UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin];
-    [status_ setText:UCLocalize("EXIT_WHEN_COMPLETE")];
-    [status_ setFont:[UIFont systemFontOfSize:16.0f]];
-    [status_ setTextColor:[UIColor whiteColor]];
-    [status_ setBackgroundColor:[UIColor clearColor]];
-    [status_ setShadowColor:[UIColor blackColor]];
-    [status_ setTextAlignment:NSTextAlignmentCenter];
-    [view addSubview:status_];
-}
-
-- (void) releaseSubviews {
-    spinner_ = nil;
-    status_ = nil;
-    caption_ = nil;
-
-    [super releaseSubviews];
-}
-
-@end
-/* }}} */
-
 @interface Cydia : CyteApplication <
     ConfirmationControllerDelegate,
     DatabaseDelegate,
@@ -8228,8 +8133,6 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
     _H<NSURL> starturl_;
 
     unsigned locked_;
-
-    _H<StashController> stash_;
 
     bool loaded_;
 }
@@ -8331,27 +8234,22 @@ static void HomeControllerReachabilityCallback(SCNetworkReachabilityRef reachabi
 }
 
 - (void) reloadSpringBoard {
-    if (kCFCoreFoundationVersionNumber >= 1443) { // XXX: iOS 11.x
-        Class $SBSRelaunchAction = objc_getClass("SBSRelaunchAction");
-        Class $FBSSystemService = objc_getClass("FBSSystemService");
-        pid_t sb_pid = launch_get_job_pid("com.apple.SpringBoard");
-        if ($SBSRelaunchAction && $FBSSystemService) {
-            id action = [$SBSRelaunchAction actionWithReason:@"respring" options:RestartRenderServer targetURL:nil];
-            id sharedService = [$FBSSystemService sharedService];
-            [sharedService sendActions:[NSSet setWithObject:action] withResult:nil];
-            for (int i=0; i<100; i++) {
-                if (kill(sb_pid, 0)) {
-                    break;
-                }
-                usleep(1000);
+    Class $SBSRelaunchAction = objc_getClass("SBSRelaunchAction");
+    Class $FBSSystemService = objc_getClass("FBSSystemService");
+    pid_t sb_pid = launch_get_job_pid("com.apple.SpringBoard");
+    if ($SBSRelaunchAction && $FBSSystemService) {
+        id action = [$SBSRelaunchAction actionWithReason:@"respring" options:RestartRenderServer targetURL:nil];
+        id sharedService = [$FBSSystemService sharedService];
+        [sharedService sendActions:[NSSet setWithObject:action] withResult:nil];
+        for (int i=0; i<100; i++) {
+            if (kill(sb_pid, 0)) {
+                break;
             }
-            if (kill(sb_pid, 0)) sleep(5);
+            usleep(1000);
         }
+        if (kill(sb_pid, 0)) sleep(5);
     }
-    if (kCFCoreFoundationVersionNumber >= 700) // XXX: iOS 6.x
-        system("/usr/libexec/cydia/cydo /bin/launchctl stop com.apple.backboardd");
-    else
-        system("/usr/libexec/cydia/cydo /bin/launchctl stop com.apple.SpringBoard");
+    system("/usr/libexec/cydia/cydo /bin/launchctl stop com.apple.SpringBoard");
     sleep(15);
     system("/usr/bin/killall backboardd SpringBoard");
 }
@@ -8995,8 +8893,6 @@ _end
 }
 
 - (void) applicationDidEnterBackground:(UIApplication *)application {
-    if (kCFCoreFoundationVersionNumber < 1000 && [self isSafeToSuspend])
-        return [self terminateWithSuccess];
     Backgrounded_ = [NSDate date];
     [self saveState];
 }
@@ -9050,28 +8946,6 @@ _end
     [alert show];
 }
 
-- (void) addStashController {
-    [self lockSuspend];
-    stash_ = [[[StashController alloc] init] autorelease];
-    [window_ addSubview:[stash_ view]];
-}
-
-- (void) removeStashController {
-    [[stash_ view] removeFromSuperview];
-    stash_ = nil;
-    [self unlockSuspend];
-}
-
-- (void) stash {
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackOpaque];
-    UpdateExternalStatus(1);
-    [self yieldToSelector:@selector(system:) withObject:@"/usr/libexec/cydia/cydo /usr/libexec/cydia/free.sh"];
-    UpdateExternalStatus(0);
-
-    [self removeStashController];
-    [self reloadSpringBoard];
-}
-
 - (void) applicationDidFinishLaunching:(id)unused {
     [super applicationDidFinishLaunching:unused];
     [CyteWebViewController _initialize];
@@ -9101,43 +8975,6 @@ _end
     [window_ orderFront:self];
     [window_ makeKey:self];
     [window_ setHidden:NO];
-
-    if (kCFCoreFoundationVersionNumber < 1349.56 && access("/.cydia_no_stash", F_OK) != 0) {
-
-    if (false) stash: {
-        [self addStashController];
-        // XXX: this would be much cleaner as a yieldToSelector:
-        // that way the removeStashController could happen right here inline
-        // we also could no longer require the useless stash_ field anymore
-        [self performSelector:@selector(stash) withObject:nil afterDelay:0];
-        return;
-    }
-
-    struct stat root;
-    int error(stat("/", &root));
-    _assert(error != -1);
-
-    #define Stash_(path) do { \
-        struct stat folder; \
-        int error(lstat((path), &folder)); \
-        if (error != -1 && ( \
-            folder.st_dev == root.st_dev && \
-            S_ISDIR(folder.st_mode) \
-        ) || error == -1 && ( \
-            errno == ENOENT || \
-            errno == ENOTDIR \
-        )) goto stash; \
-    } while (false)
-
-    Stash_("/Applications");
-    Stash_("/Library/Ringtones");
-    Stash_("/Library/Wallpaper");
-    //Stash_("/usr/bin");
-    Stash_("/usr/include");
-    Stash_("/usr/share");
-    //Stash_("/var/lib");
-
-    }
 
     database_ = [Database sharedInstance];
     [database_ setDelegate:self];
@@ -9432,7 +9269,7 @@ int main(int argc, char *argv[]) {
 
         CollationLocale_ = MSHookIvar<NSLocale *>(collation, "_locale");
 
-        if (kCFCoreFoundationVersionNumber >= 800 && [[CollationLocale_ localeIdentifier] isEqualToString:@"zh@collation=stroke"]) {
+        if ([[CollationLocale_ localeIdentifier] isEqualToString:@"zh@collation=stroke"]) {
             CollationThumbs_ = [NSArray arrayWithObjects:@"1",@"•",@"4",@"•",@"7",@"•",@"10",@"•",@"13",@"•",@"16",@"•",@"19",@"A",@"•",@"E",@"•",@"I",@"•",@"M",@"•",@"R",@"•",@"V",@"•",@"Z",@"#",nil];
             for (NSInteger offset : (NSInteger[]) {0,1,3,4,6,7,9,10,12,13,15,16,18,25,26,29,30,33,34,37,38,42,43,46,47,50,51})
                 CollationOffset_.push_back(offset);
@@ -9580,9 +9417,6 @@ int main(int argc, char *argv[]) {
 
     Finishes_ = [NSArray arrayWithObjects:@"return", @"reopen", @"restart", @"reload", @"reboot", nil];
 
-    if (kCFCoreFoundationVersionNumber > 1000)
-        system("/usr/libexec/cydia/cydo /usr/libexec/cydia/setnsfpn /var/lib");
-
     int version([[NSString stringWithContentsOfFile:@"/var/lib/cydia/firmware.ver"] intValue]);
 
     if (access("/User", F_OK) != 0 || version != 6) {
@@ -9670,7 +9504,7 @@ int main(int argc, char *argv[]) {
     $SBSSetInterceptsMenuButtonForever = reinterpret_cast<void (*)(bool)>(dlsym(RTLD_DEFAULT, "SBSSetInterceptsMenuButtonForever"));
     $SBSCopyIconImagePNGDataForDisplayIdentifier = reinterpret_cast<NSData *(*)(NSString *)>(dlsym(RTLD_DEFAULT, "SBSCopyIconImagePNGDataForDisplayIdentifier"));
 
-    const char *symbol(kCFCoreFoundationVersionNumber >= 800 ? "MGGetBoolAnswer" : "GSSystemHasCapability");
+    const char *symbol("MGGetBoolAnswer");
     BOOL (*GSSystemHasCapability)(CFStringRef) = reinterpret_cast<BOOL (*)(CFStringRef)>(dlsym(RTLD_DEFAULT, symbol));
     bool fast = GSSystemHasCapability != NULL && GSSystemHasCapability(CFSTR("armv7"));
 

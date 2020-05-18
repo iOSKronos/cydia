@@ -1,17 +1,17 @@
 Package: cydia
-Priority: required
+Priority: important
 Section: Packaging
 Maintainer: Jay Freeman (saurik) <saurik@saurik.com>
 Architecture: iphoneos-arm
 Version: 
-Replaces: bigboss, bigbossbetarepo, com.sosiphone.addcydia, cydia-sources, ispazio.net, modmyifone, saurik, ste, yellowsn0w.com, zodttd
-Depends: cydia-lproj (>= 1.1.10), darwintools, debianutils, dpkg (>= 1.19.1), org.thebigboss.repo.icons, sed, shell-cmds, system-cmds, uikittools (>= 1.1.14), xz
-Conflicts: bigboss, bigbossbetarepo, com.sosiphone.addcydia, cydia-sources, ispazio.net, modmyifone, ste, yellowsn0w.com, zodttd
-Pre-Depends: debianutils, dpkg (>= 1.16.1), firmware (>=5.0)
-Provides: bigbossbetarepo, cydia-sources
+Replaces: bigboss, bigbossbetarepo, com.sosiphone.addcydia, cydia-sources, cydia-lproj, ispazio.net, modmyifone, saurik, ste, yellowsn0w.com, zodttd
+Depends: darwintools, debianutils, dpkg (>= 1.19.1), sed, shell-cmds, system-cmds, uikittools (>= 1.1.14), xz-utils
+Conflicts: bigboss, bigbossbetarepo, com.sosiphone.addcydia, cydia-sources, cydia-lproj, ispazio.net, modmyifone, ste, yellowsn0w.com, zodttd
+Pre-Depends: debianutils, dpkg (>= 1.16.1), firmware (>=11.0)
+Provides: bigbossbetarepo, cydia-sources, cydia-lproj
 Description: graphical iPhone front-end for APT
 Name: Cydia Installer
 Author: Jay Freeman (saurik) <saurik@saurik.com>
 Depiction: http://cydia.saurik.com/info/cydia/
 Icon: file:///Applications/Cydia.app/Icon-60.png
-Tag: purpose::uikit, cydia::essential, role::enduser
+Tag: purpose::uikit, role::enduser
